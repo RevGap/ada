@@ -5,15 +5,15 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Copy the requirements file into the container at /app
-# Path is relative to the build context (repository root)
-COPY server/requirements.txt .
+# Path is relative to the build context (server/)
+COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 # Use --no-cache-dir to reduce image size
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the backend application code (from the server/ subdir) into the container at /app
-COPY server/ .
+# Copy the backend application code (from the server/ context) into the container at /app
+COPY . .
 
 # Make port 5001 available to the world outside this container
 EXPOSE 5001

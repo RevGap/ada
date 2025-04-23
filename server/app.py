@@ -3,8 +3,9 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import threading
-from flask import Flask, render_template, request # Make sure request is imported
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
+from geopy.geocoders import Nominatim # Import geopy
 
 load_dotenv()
 from ADA_Online import ADA # Make sure filename matches ADA_Online.py
@@ -25,6 +26,9 @@ socketio = SocketIO(
 ada_instance = None
 ada_loop = None
 ada_thread = None
+
+# Initialize geolocator
+geolocator = Nominatim(user_agent="ada_app") # Added user_agent
 
 def run_asyncio_loop(loop):
     """ Function to run the asyncio event loop in a separate thread """
@@ -167,6 +171,47 @@ def handle_transcribed_text(data):
          print("    Received empty transcript.")
     else:
          print(f"    ADA instance not ready or SID mismatch for transcript from {client_sid}.")
+
+
+# ++++ ADD COORDINATE HANDLER ++++
+@socketio.on('send_coordinates')
+def handle_coordinates(data):
+    """ Receives coordinates from client, performs reverse geocoding, and sends address back """
+    client_sid = request.sid
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
+    print(f"Received coordinates from {client_sid}: Lat={latitude}, Lon={longitude}")
+
+    if latitude is not None and longitude is not None:
+        try:
+            location = geolocator.reverse((latitude, longitude), exactly_one=True, language='en')
+            if location and location.address:
+                # Try to extract City, State (this depends heavily on Nominatim's response structure)
+                address_parts = location.raw.get('address', {})
+                city = address_parts.get('city', address_parts.get('town', address_parts.get('village', '')))
+                state = address_parts.get('state', '')
+                country = address_parts.get('country', '') # Added country
+
+                if city and state:
+                    formatted_address = f"{city}, {state}"
+                elif city and country: # Fallback if state isn't available
+                    formatted_address = f"{city}, {country}"
+                elif state and country: # Fallback if city isn't available
+                    formatted_address = f"{state}, {country}"
+                else:
+                    formatted_address = location.address # Fallback to full address
+
+                print(f"    Reverse geocoded address for {client_sid}: {formatted_address}")
+                emit('receive_address', {'address': formatted_address}, room=client_sid)
+            else:
+                print(f"    Could not reverse geocode coordinates for {client_sid}.")
+                emit('receive_address', {'address': 'Address not found'}, room=client_sid)
+        except Exception as e:
+            print(f"    Error during reverse geocoding for {client_sid}: {e}")
+            emit('receive_address', {'address': 'Geocoding error'}, room=client_sid)
+    else:
+        print(f"    Invalid coordinates received from {client_sid}.")
+        emit('receive_address', {'address': 'Invalid coordinates'}, room=client_sid)
 
 
 # **** ADD VIDEO FRAME HANDLER ****

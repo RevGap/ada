@@ -15,3 +15,4 @@ beautifulsoup4
 lxml # Parser for BeautifulSoup
 requests # Often a dependency
 eventlet # Recommended async mode for Flask-SocketIO
+geopy # For reverse geocoding

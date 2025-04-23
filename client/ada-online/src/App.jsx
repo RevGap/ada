@@ -91,9 +91,17 @@ function App() {
     let watchId = null; // Keep track of the watch process
 
     const handlePositionSuccess = (position) => {
-      // Got a position, update state and stop watching
-      setUserLocation("Location Determined"); // Simple confirmation
+      const { latitude, longitude } = position.coords;
+      setUserLocation(`Coords: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`); // Show coords briefly
       console.log("Geolocation watch success:", position.coords);
+
+      // Send coordinates to backend
+      if (socket.current?.connected) {
+        console.log("Sending coordinates to backend:", { latitude, longitude });
+        socket.current.emit("send_coordinates", { latitude, longitude });
+        setUserLocation("Looking up address..."); // Update status
+      }
+
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId); // Stop watching
         watchId = null; // Clear the ID
@@ -747,12 +755,12 @@ function App() {
         // Optionally clear the code widget if invalid data is received
         // setExecutableCode(null);
         // setCodeLanguage(null);
-      }
-    };
+       }
+     };
 
-    // **** ADD SEARCH RESULTS LISTENER ****
-    const handleSearchResultsUpdate = (data) => {
-      console.log("Received search results update:", data);
+     // **** ADD SEARCH RESULTS LISTENER ****
+     const handleSearchResultsUpdate = (data) => {
+       console.log("Received search results update:", data);
       // Expecting data format: { query: "...", results: [{ url: "...", title: "..." }, ...] }
       if (data && Array.isArray(data.results)) {
         // Check if results is an array
@@ -764,11 +772,21 @@ function App() {
         );
         // Optionally set empty results to still show the widget with a message
         setSearchInfo({ query: data?.query || "Search", results: [] });
-      }
-    };
+       }
+     };
 
-    // --- Assign Socket Listeners ---
-    socket.current.on("connect", handleConnect);
+     // ++++ ADD ADDRESS RECEIVER LISTENER ++++
+     const handleReceiveAddress = (data) => {
+        console.log("Received address from backend:", data);
+        if (data && data.address) {
+            setUserLocation(data.address); // Update state with the address string
+        } else {
+            setUserLocation("Address lookup failed"); // Fallback message
+        }
+     };
+
+     // --- Assign Socket Listeners ---
+     socket.current.on("connect", handleConnect);
     socket.current.on("disconnect", handleDisconnect);
     socket.current.on("connect_error", handleConnectError);
     socket.current.on("status", handleStatus);
@@ -776,12 +794,13 @@ function App() {
     socket.current.on("receive_text_chunk", handleTextChunk);
     socket.current.on("receive_audio_chunk", handleAudioChunk);
     socket.current.on("weather_update", handleWeatherUpdate); // Listen for weather
-    socket.current.on("map_update", handleMapUpdate); // Listen for map
-    socket.current.on("executable_code_received", handleExecutableCode); // Listen for code
-    socket.current.on("search_results_update", handleSearchResultsUpdate); // Listen for search results
+     socket.current.on("map_update", handleMapUpdate); // Listen for map
+     socket.current.on("executable_code_received", handleExecutableCode); // Listen for code
+     socket.current.on("search_results_update", handleSearchResultsUpdate); // Listen for search results
+     socket.current.on("receive_address", handleReceiveAddress); // Listen for address
 
-    // --- Cleanup Function ---
-    return () => {
+     // --- Cleanup Function ---
+     return () => {
       console.log("--- Socket.IO useEffect CLEANUP ---");
       if (socket.current) {
         // Remove all listeners
@@ -793,12 +812,13 @@ function App() {
         socket.current.off("receive_text_chunk", handleTextChunk);
         socket.current.off("receive_audio_chunk", handleAudioChunk);
         socket.current.off("weather_update", handleWeatherUpdate);
-        socket.current.off("map_update", handleMapUpdate);
-        socket.current.off("executable_code_received", handleExecutableCode);
-        socket.current.off("search_results_update", handleSearchResultsUpdate);
+         socket.current.off("map_update", handleMapUpdate);
+         socket.current.off("executable_code_received", handleExecutableCode);
+         socket.current.off("search_results_update", handleSearchResultsUpdate);
+         socket.current.off("receive_address", handleReceiveAddress); // Remove address listener
 
-        // Disconnect the socket
-        socket.current.disconnect();
+         // Disconnect the socket
+         socket.current.disconnect();
         socket.current = null; // Clear the ref
       }
     };

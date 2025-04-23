@@ -1,5 +1,7 @@
 /realtimesst.log
 /.env
+fly.backend.toml
+fly.frontend.toml
 
 # Python cache
 __pycache__/

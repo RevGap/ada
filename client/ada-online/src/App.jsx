@@ -512,9 +512,14 @@ function App() {
         setStatusText("Mic permission denied.");
         userRequestedStop.current = true; // Prevent restart
         setIsMuted(true); // Reflect denied state in UI
-      } else {
+      } else if (event.error === "network") {
         setStatusText(`Speech Error: ${event.error}`);
-        userRequestedStop.current = true; // Prevent restart for other errors
+        // Do NOT set userRequestedStop = true for network errors, allow auto-restart
+        userRequestedStop.current = false; // Ensure this is false
+      }
+       else {
+        setStatusText(`Speech Error: ${event.error}`);
+        userRequestedStop.current = true; // Prevent restart for other unhandled errors
       }
     };
 
@@ -612,7 +617,7 @@ function App() {
         console.log("SpeechRecognition instance cleaned up.");
       }
     };
-  }, []); // Empty dependency array: Initialize and clean up only once
+  }, []); // Empty dependency array: Run only once on mount
 
   // --- Socket.IO Connection Effect ---
   useEffect(() => {
@@ -720,7 +725,8 @@ function App() {
 
     // **** ADD WEATHER UPDATE HANDLER ****
     const handleWeatherUpdate = (data) => {
-      console.log("Received weather update:", data);
+      console.log("Received weather update:", data); // Keep existing log
+      console.log('Weather data received:', data); // Add new log
       if (data && data.location) {
         // Basic validation
         setWeatherInfo(data); // Update state with the weather data object
@@ -731,7 +737,8 @@ function App() {
 
     // ++++ ADD MAP UPDATE HANDLER ++++
     const handleMapUpdate = (data) => {
-      console.log("Received map update:", data);
+      console.log("Received map update:", data); // Keep existing log
+      console.log('Map data received:', data); // Add new log
       if (data && data.destination) {
         // Basic validation
         setMapInfo(data); // Update state with the map data object

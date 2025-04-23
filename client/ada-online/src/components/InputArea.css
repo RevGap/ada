@@ -1,122 +1,190 @@
 /* src/components/InputArea.css */
 .input-area {
     display: flex;
-    margin-top: 15px; /* Increase space */
-    padding: 15px 0 5px 0; /* Adjust padding, less bottom */
-    border-top: 1px solid #e9ecef; /* Lighter separator */
+    align-items: center; /* Vertically align items */
+    margin-top: 20px; /* Increase space */
+    padding: 20px 0 10px 0; /* Adjust padding */
+    border-top: 1px solid var(--muted-text-light); /* Use theme variable for separator */
+    gap: 10px; /* Add gap between input and buttons */
 }
  @media (prefers-color-scheme: dark) {
     body:not([data-theme="light"]) .input-area {
-         border-top-color: #333;
+         border-top-color: var(--muted-text-dark);
     }
 }
  body[data-theme="dark"] .input-area {
-    border-top-color: #333;
+    border-top-color: var(--muted-text-dark);
+}
+
+/* Responsive adjustments for input area */
+@media (max-width: 600px) {
+    .input-area {
+        flex-direction: column; /* Stack items on small screens */
+        align-items: stretch; /* Stretch items to full width */
+        padding: 15px 0 5px 0; /* Adjust padding */
+        gap: 15px; /* Increase gap when stacked */
+    }
 }
 
 
 .message-input {
     flex-grow: 1;
-    padding: 12px 15px; /* More padding */
-    border: 1px solid #ced4da; /* Standard border */
-    border-radius: 8px; /* Match buttons */
-    font-size: 1em;
-    background-color: var(--background-light); /* Use theme variable */
-    color: var(--text-light);
+    padding: 14px 18px; /* More padding */
+    border: 1px solid var(--muted-text-light); /* Use theme variable for border */
+    border-radius: 25px; /* More rounded corners */
+    font-size: 1.1em; /* Slightly larger font */
+    background-color: var(--background-color-light); /* Use theme variable */
+    color: var(--text-color-light);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
 }
 .message-input:focus {
     outline: none;
-    border-color: var(--accent-light);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    border-color: var(--primary-color-light); /* Use primary color on focus */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3); /* Larger, softer glow */
 }
  @media (prefers-color-scheme: dark) {
     body:not([data-theme="light"]) .message-input {
          background-color: var(--card-background-dark);
-         color: var(--text-dark);
-         border-color: #555;
+         color: var(--text-color-dark);
+         border-color: var(--muted-text-dark);
     }
      body:not([data-theme="light"]) .message-input:focus {
-         border-color: var(--accent-dark);
-          box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.3);
+         border-color: var(--primary-color-dark);
+          box-shadow: 0 0 0 3px rgba(74, 78, 105, 0.4);
      }
 }
 body[data-theme="dark"] .message-input {
     background-color: var(--card-background-dark);
-    color: var(--text-dark);
-    border-color: #555;
+    color: var(--text-color-dark);
+    border-color: var(--muted-text-dark);
 }
 body[data-theme="dark"] .message-input:focus {
-    border-color: var(--accent-dark);
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.3);
+    border-color: var(--primary-color-dark);
+    box-shadow: 0 0 0 3px rgba(74, 78, 105, 0.4);
+}
+
+/* Responsive adjustment for input width when stacked */
+@media (max-width: 600px) {
+    .message-input {
+        width: 100%; /* Take full width when stacked */
+    }
 }
 
 
 /* Use base button styles from index.css - only add specifics */
 .send-button,
-.mute-button {
-    margin-left: 10px;
-    padding: 10px 15px; /* Match input padding */
+.mute-button,
+.webcam-button {
+    /* margin-left: 10px; */ /* Removed due to gap */
+    padding: 12px 20px; /* Adjust padding */
+    border-radius: 25px; /* Match input rounding */
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease; /* Smooth transitions */
+    flex-shrink: 0; /* Prevent buttons from shrinking */
 }
 
+/* Responsive adjustment for button width when stacked */
+@media (max-width: 600px) {
+    .send-button,
+    .mute-button,
+    .webcam-button {
+        width: 100%; /* Take full width when stacked */
+        margin-left: 0; /* Remove left margin */
+    }
+}
+
+
 .send-button {
-    background-color: var(--accent-light); /* Use variable */
+    background-color: var(--accent-color-light); /* Use accent variable */
     color: white;
     border: none;
 }
-.send-button:hover {
-    filter: brightness(90%);
-    border: none; /* Override index.css border */
+.send-button:hover:not(:disabled) {
+    opacity: 0.9; /* Subtle hover effect */
 }
  @media (prefers-color-scheme: dark) {
      body:not([data-theme="light"]) .send-button {
-        background-color: var(--accent-dark);
+        background-color: var(--accent-color-dark);
      }
 }
 body[data-theme="dark"] .send-button {
-    background-color: var(--accent-dark);
+    background-color: var(--accent-color-dark);
 }
 
 
 .mute-button {
-    background-color: #28a745;
+    background-color: var(--primary-color-light); /* Use primary color */
     color: white;
     border: none;
 }
 .mute-button:hover:not(:disabled) {
-    filter: brightness(90%);
-    border: none;
+    opacity: 0.9; /* Subtle hover effect */
 }
 .mute-button.muted {
-    background-color: #dc3545;
+    background-color: var(--muted-text-light); /* Muted color */
 }
 .mute-button.muted:hover:not(:disabled) {
-    filter: brightness(90%);
-    border: none;
+    opacity: 0.9;
 }
-.mute-button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.7;
-    border: none;
+ @media (prefers-color-scheme: dark) {
+     body:not([data-theme="light"]) .mute-button {
+        background-color: var(--primary-color-dark); /* Use dark primary */
+     }
+     body:not([data-theme="light"]) .mute-button.muted {
+        background-color: var(--muted-text-dark); /* Dark muted color */
+     }
+}
+body[data-theme="dark"] .mute-button {
+    background-color: var(--primary-color-dark);
+}
+body[data-theme="dark"] .mute-button.muted {
+    background-color: var(--muted-text-dark);
 }
 
+
 .webcam-button {
-    margin-left: 10px;
-    padding: 10px 15px; /* Match other buttons */
-    background-color: #17a2b8; /* Teal color */
+    background-color: var(--primary-color-light); /* Use primary color */
     color: white;
     border: none;
 }
 .webcam-button:hover:not(:disabled) {
-    filter: brightness(90%);
-    border: none;
+    opacity: 0.9; /* Subtle hover effect */
 }
 .webcam-button.active {
-    background-color: #138496; /* Darker teal when active */
+    background-color: var(--accent-color-light); /* Use accent color when active */
 }
+ @media (prefers-color-scheme: dark) {
+     body:not([data-theme="light"]) .webcam-button {
+        background-color: var(--primary-color-dark); /* Use dark primary */
+     }
+     body:not([data-theme="light"]) .webcam-button.active {
+        background-color: var(--accent-color-dark); /* Use dark accent when active */
+     }
+}
+body[data-theme="dark"] .webcam-button {
+    background-color: var(--primary-color-dark);
+}
+body[data-theme="dark"] .webcam-button.active {
+    background-color: var(--accent-color-dark);
+}
+
+.send-button:disabled,
+.mute-button:disabled,
 .webcam-button:disabled {
-    background-color: #6c757d;
+    background-color: var(--muted-text-light); /* Use muted text color for disabled */
     cursor: not-allowed;
     opacity: 0.7;
-    border: none;
+}
+ @media (prefers-color-scheme: dark) {
+     body:not([data-theme="light"]) .send-button:disabled,
+     body:not([data-theme="light"]) .mute-button:disabled,
+     body:not([data-theme="light"]) .webcam-button:disabled {
+        background-color: var(--muted-text-dark); /* Use dark muted text color for disabled */
+     }
+}
+body[data-theme="dark"] .send-button:disabled,
+body[data-theme="dark"] .mute-button:disabled,
+body[data-theme="dark"] .webcam-button:disabled {
+    background-color: var(--muted-text-dark);
 }

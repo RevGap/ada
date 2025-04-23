@@ -3,86 +3,111 @@
 .search-widget-container {
   /* --- Positioning & Dragging --- */
   position: fixed;
+  /* Position set by state in component */
   z-index: 997; /* Adjust z-index as needed relative to other widgets */
-  width: 350px; /* Adjust width */
-  max-width: 70%;
-  max-height: 300px; /* Adjust height */
+  width: 380px; /* Slightly wider default */
+  max-width: 95%; /* Allow it to take more width on smaller screens */
+  max-height: 80vh; /* Limit max height */
   cursor: grab;
   user-select: none;
 
   /* --- Base styles --- */
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--primary-color-light); /* Use primary theme color for border */
+  border-radius: 12px; /* Match app container radius */
   padding: 15px;
   padding-top: 35px; /* Space for title and close button */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Softer shadow */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Allows list scrolling */
+  transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+
 
   /* --- Theme Styles --- */
   background-color: var(--card-background-light, #ffffff);
-  color: var(--text-light, #212529);
-  border-color: var(--muted-text-light, #ccc);
+  color: var(--text-color-light, #212529);
 }
 
 .search-widget-container.dragging {
   cursor: grabbing;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* Enhance shadow while dragging */
 }
 
 /* Dark Theme Styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-container {
     background-color: var(--card-background-dark, #2c3034);
-    color: var(--text-dark, #e9ecef);
-    border-color: var(--muted-text-dark, #555);
+    color: var(--text-color-dark, #e9ecef);
+    border-color: var(--primary-color-dark); /* Use dark primary theme color */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+  body:not([data-theme="light"]) .search-widget-container.dragging {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
   }
 }
 body[data-theme="dark"] .search-widget-container {
   background-color: var(--card-background-dark, #2c3034);
-  color: var(--text-dark, #e9ecef);
-  border-color: var(--muted-text-dark, #555);
+  color: var(--text-color-dark, #e9ecef);
+  border-color: var(--primary-color-dark);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+body[data-theme="dark"] .search-widget-container.dragging {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 /* --- End Theme Styles --- */
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .search-widget-container {
+    width: 95%; /* Take almost full width on mobile */
+    max-width: none; /* Remove max-width constraint */
+    height: 60vh; /* Adjust height */
+    border-radius: 8px; /* Slightly smaller radius */
+    padding: 10px;
+    padding-top: 30px; /* Adjust padding top */
+  }
+}
+
 
 /* --- Close Button Styles (Same as other widgets) --- */
 .search-widget-close-button {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.3); /* Slightly more opaque */
   color: inherit;
   border: none;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  font-size: 15px;
+  width: 24px; /* Slightly larger button */
+  height: 24px; /* Slightly larger button */
+  font-size: 16px; /* Slightly larger font */
   font-weight: bold;
-  line-height: 20px;
+  line-height: 24px; /* Adjust for vertical centering */
   text-align: center;
   cursor: pointer;
   padding: 0;
   z-index: 10;
+  transition: background-color 0.2s ease, transform 0.2s ease; /* Smooth transitions */
 }
 .search-widget-close-button:hover {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 0, 0, 0.6); /* More opaque red on hover */
+  transform: rotate(90deg); /* Rotate on hover */
 }
 /* Dark theme close button */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-close-button {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
   }
   body:not([data-theme="light"]) .search-widget-close-button:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 0, 0, 0.6); /* Still red on hover in dark mode */
   }
 }
 body[data-theme="dark"] .search-widget-close-button {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
 }
 body[data-theme="dark"] .search-widget-close-button:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 0, 0, 0.6);
 }
 
 /* --- Title Styles --- */
@@ -97,7 +122,17 @@ body[data-theme="dark"] .search-widget-close-button:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--primary-color-light); /* Use primary color */
 }
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .search-widget-container h4 {
+    color: var(--primary-color-dark); /* Use dark primary color */
+  }
+}
+body[data-theme="dark"] .search-widget-container h4 {
+  color: var(--primary-color-dark);
+}
+
 
 /* --- List Styles --- */
 .search-widget-list {
@@ -112,7 +147,7 @@ body[data-theme="dark"] .search-widget-close-button:hover {
 .search-widget-list li {
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--muted-text-light, #eee);
+  border-bottom: 1px solid var(--muted-text-light); /* Use muted text color */
 }
 .search-widget-list li:last-child {
   border-bottom: none;
@@ -121,15 +156,15 @@ body[data-theme="dark"] .search-widget-close-button:hover {
 /* Dark theme border */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-list li {
-    border-bottom-color: var(--muted-text-dark, #444);
+    border-bottom-color: var(--muted-text-dark);
   }
 }
 body[data-theme="dark"] .search-widget-list li {
-  border-bottom-color: var(--muted-text-dark, #444);
+  border-bottom-color: var(--muted-text-dark);
 }
 
 .search-widget-list a {
-  color: var(--accent-light, #007bff);
+  color: var(--accent-color-light); /* Use accent color */
   text-decoration: none;
   display: block; /* Make the link take full width */
   /* Truncate long URLs/titles */
@@ -143,17 +178,17 @@ body[data-theme="dark"] .search-widget-list li {
 /* Dark theme link */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-list a {
-    color: var(--accent-dark, #0d6efd);
+    color: var(--accent-color-dark); /* Use dark accent color */
   }
 }
 body[data-theme="dark"] .search-widget-list a {
-  color: var(--accent-dark, #0d6efd);
+  color: var(--accent-color-dark);
 }
 
 /* Optional snippet styling */
 .search-widget-list li p {
   font-size: 0.85em;
-  color: var(--muted-text-light, #6c757d);
+  color: var(--muted-text-light); /* Use muted text color */
   margin-top: 3px;
   margin-bottom: 0;
   /* Allow snippet text to wrap */
@@ -167,9 +202,9 @@ body[data-theme="dark"] .search-widget-list a {
 }
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-list li p {
-    color: var(--muted-text-dark, #adb5bd);
+    color: var(--muted-text-dark); /* Use dark muted text color */
   }
 }
 body[data-theme="dark"] .search-widget-list li p {
-  color: var(--muted-text-dark, #adb5bd);
+  color: var(--muted-text-dark);
 }

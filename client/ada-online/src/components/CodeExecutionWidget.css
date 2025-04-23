@@ -5,61 +5,106 @@
   position: fixed;
   top: 20px; /* Distance from top */
   right: 20px; /* Distance from right */
-  width: 500px; /* Smaller width */
-  max-width: 80%; /* Keep max-width constraint */
-  max-height: 400px; /* Smaller max-height */
+  width: 550px; /* Slightly wider default */
+  max-width: 95%; /* Allow it to take more width on smaller screens */
+  max-height: 80vh; /* Limit max height */
   z-index: 1002; /* Ensure it's above other widgets if necessary */
   /* Removed cursor and user-select */
 
   /* --- Base styles --- */
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--primary-color-light); /* Use primary theme color for border */
+  border-radius: 12px; /* Match app container radius */
   padding: 15px;
   padding-top: 35px; /* Space for title and close button */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Softer shadow */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width 0.3s ease, height 0.3s ease, top 0.3s ease, right 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+
 
   /* --- Theme Styles --- */
   background-color: var(--card-background-light, #ffffff);
-  color: var(--text-light, #212529);
-  border-color: var(--muted-text-light, #ccc);
+  color: var(--text-color-light, #212529);
 }
-
-/* --- Removed .dragging class style block --- */
 
 /* Dark Theme Styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .code-widget-container {
     background-color: var(--card-background-dark, #2c3034);
-    color: var(--text-dark, #e9ecef);
-    border-color: var(--muted-text-dark, #555);
+    color: var(--text-color-dark, #e9ecef);
+    border-color: var(--primary-color-dark); /* Use dark primary theme color */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   }
-  /* No specific dark theme for dragging needed anymore */
 }
 body[data-theme="dark"] .code-widget-container {
   background-color: var(--card-background-dark, #2c3034);
-  color: var(--text-dark, #e9ecef);
-  border-color: var(--muted-text-dark, #555);
+  color: var(--text-color-dark, #e9ecef);
+  border-color: var(--primary-color-dark);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 /* --- End Theme Styles --- */
 
-/* --- Close Button Styles (Keep as is) --- */
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .code-widget-container {
+    width: 95%; /* Take almost full width on mobile */
+    max-width: none; /* Remove max-width constraint */
+    height: 60vh; /* Adjust height */
+    top: 10px; /* Closer to top on mobile */
+    right: 10px; /* Closer to right on mobile */
+    border-radius: 8px; /* Slightly smaller radius */
+    padding: 10px;
+    padding-top: 30px; /* Adjust padding top */
+  }
+}
+
+
+/* --- Close Button Styles --- */
 .code-widget-close-button {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  /* ... rest of close button styles ... */
-  z-index: 10; /* Ensure it's above the code block */
+  top: 8px; /* Adjust position */
+  right: 8px; /* Adjust position */
+  background: rgba(0, 0, 0, 0.3); /* Slightly more opaque */
+  color: inherit; /* Inherit color from widget text */
+  border: none;
+  border-radius: 50%;
+  width: 24px; /* Slightly larger button */
+  height: 24px; /* Slightly larger button */
+  font-size: 16px; /* Slightly larger font */
+  font-weight: bold;
+  line-height: 24px; /* Adjust for vertical centering */
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10; /* Above the code block */
+  transition: background-color 0.2s ease, transform 0.2s ease; /* Smooth transitions */
 }
-.code-widget-close-button:hover {
-  background: rgba(0, 0, 0, 0.4);
-}
-/* ... dark theme close button styles ... */
 
-/* --- Title Styles (Keep as is) --- */
+.code-widget-close-button:hover {
+  background: rgba(255, 0, 0, 0.6); /* More opaque red on hover */
+  transform: rotate(90deg); /* Rotate on hover */
+}
+
+/* Dark theme adjustments for close button */
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .code-widget-close-button {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  body:not([data-theme="light"]) .code-widget-close-button:hover {
+    background: rgba(255, 0, 0, 0.6); /* Still red on hover in dark mode */
+  }
+}
+body[data-theme="dark"] .code-widget-close-button {
+  background: rgba(255, 255, 255, 0.3);
+}
+body[data-theme="dark"] .code-widget-close-button:hover {
+  background: rgba(255, 0, 0, 0.6);
+}
+
+
+/* --- Title Styles --- */
 .code-widget-container h4 {
   margin-top: 0;
   margin-bottom: 10px;
@@ -67,12 +112,22 @@ body[data-theme="dark"] .code-widget-container {
   font-weight: 600;
   text-align: center;
   flex-shrink: 0;
+  color: var(--primary-color-light); /* Use primary color */
+}
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .code-widget-container h4 {
+    color: var(--primary-color-dark); /* Use dark primary color */
+  }
+}
+body[data-theme="dark"] .code-widget-container h4 {
+  color: var(--primary-color-dark);
 }
 
-/* --- Code Block Styles (Keep as is) --- */
+
+/* --- Code Block Styles --- */
 .code-widget-pre {
   flex-grow: 1;
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: var(--background-color-light); /* Use background color */
   padding: 10px;
   border-radius: 4px;
   overflow: auto;
@@ -80,20 +135,22 @@ body[data-theme="dark"] .code-widget-container {
   font-family: "Courier New", Courier, monospace;
   font-size: 0.9em;
   line-height: 1.4;
-  white-space: pre;
+  white-space: pre-wrap; /* Allow wrapping */
+  word-break: break-all; /* Break long words */
   /* Ensure code block allows default cursor/selection */
   cursor: text;
   user-select: text;
+  border: 1px solid var(--muted-text-light); /* Add subtle border */
 }
 
 /* Dark theme pre block */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .code-widget-pre {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid #444; /* Optional subtle border */
+    background-color: var(--background-color-dark); /* Use dark background color */
+    border-color: var(--muted-text-dark); /* Use dark muted text color */
   }
 }
 body[data-theme="dark"] .code-widget-pre {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid #444;
+  background-color: var(--background-color-dark);
+  border-color: var(--muted-text-dark);
 }

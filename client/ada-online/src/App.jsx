@@ -52,6 +52,7 @@ function App() {
   // **** ADD SEARCH RESULTS STATE ****
   const [searchInfo, setSearchInfo] = useState(null); // Holds {query: '...', results: [...]}
   // **** END SEARCH RESULTS STATE ****
+  const [userLocation, setUserLocation] = useState("Checking location..."); // State for user location
 
   // --- Refs ---
   const socket = useRef(null);
@@ -84,6 +85,119 @@ function App() {
     const timerId = setInterval(() => setCurrentTime(getCurrentTime()), 1000);
     return () => clearInterval(timerId);
   }, []);
+
+  // --- Geolocation Effect ---
+  useEffect(() => {
+    let watchId = null; // Keep track of the watch process
+
+    const handlePositionSuccess = (position) => {
+      // Got a position, update state and stop watching
+      setUserLocation("Location Determined"); // Simple confirmation
+      console.log("Geolocation watch success:", position.coords);
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId); // Stop watching
+        watchId = null; // Clear the ID
+      }
+    };
+
+    const handlePositionError = (error) => {
+      console.error("Geolocation watch error:", error); // Log watch error
+      let errorMessage = "Location unavailable";
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = "Location permission denied.";
+          // Stop watching if permission is denied permanently
+          if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = "Location position unavailable.";
+          // Keep watching in case it becomes available later
+          break;
+        case error.TIMEOUT:
+          errorMessage = "Location request timed out.";
+          // Keep watching, maybe the next attempt will succeed
+          break;
+        default:
+          errorMessage = "Location unavailable (unknown error).";
+          // Stop watching on unknown errors
+          if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+          break;
+      }
+      setUserLocation(errorMessage);
+    };
+
+    const startWatchingPosition = () => {
+      console.log("Attempting to watch position with high accuracy...");
+      watchId = navigator.geolocation.watchPosition(
+        handlePositionSuccess,
+        handlePositionError,
+        { // Options for watchPosition
+          enableHighAccuracy: true, // Try forcing high accuracy
+          timeout: 30000, // Keep 30 seconds timeout
+          maximumAge: 300000 // Accept cached position up to 5 minutes old
+        }
+      );
+    };
+
+    if (navigator.geolocation && navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then((permissionStatus) => {
+        console.log('Geolocation permission state:', permissionStatus.state);
+        setUserLocation(`Permission: ${permissionStatus.state}`); // Show permission status initially
+
+        if (permissionStatus.state === 'granted') {
+          startWatchingPosition();
+        } else if (permissionStatus.state === 'prompt') {
+          // Browser will prompt, watchPosition will handle success/error
+          startWatchingPosition();
+        } else if (permissionStatus.state === 'denied') {
+          setUserLocation("Location permission denied.");
+        }
+
+        // Listen for changes in permission status
+        permissionStatus.onchange = () => {
+          console.log('Geolocation permission state changed:', permissionStatus.state);
+          setUserLocation(`Permission: ${permissionStatus.state}`);
+          if (permissionStatus.state === 'granted') {
+            if (watchId === null) { // Start watching only if not already watching
+              startWatchingPosition();
+            }
+          } else if (permissionStatus.state === 'denied') {
+            setUserLocation("Location permission denied.");
+            if (watchId !== null) { // Stop watching if permission is revoked
+              navigator.geolocation.clearWatch(watchId);
+              watchId = null;
+            }
+          }
+        };
+      }).catch(err => {
+         console.error("Error querying geolocation permission:", err);
+         setUserLocation("Cannot check location permission.");
+         // Fallback to trying anyway, might still work in some browsers
+         if (navigator.geolocation) {
+            startWatchingPosition();
+         }
+      });
+
+    } else if (navigator.geolocation) {
+       // Fallback for browsers without navigator.permissions
+       console.log("navigator.permissions not supported, trying watchPosition directly.");
+       startWatchingPosition();
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+      setUserLocation("Geolocation not supported");
+    }
+
+
+    // Cleanup function to clear the watch when the component unmounts
+    return () => {
+      if (watchId !== null) {
+        console.log("Clearing geolocation watch ID:", watchId);
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, []); // Empty dependency array to run only once on mount
 
   // --- AudioContext Management (Callbacks) ---
   const initializeAudioContext = useCallback(() => {
@@ -908,8 +1022,8 @@ function App() {
       {/* **** END SEARCH RESULTS WIDGET RENDER **** */}
 
       <footer>
-        {/* Updated Location */}
-        <p>Location: Smyrna, Georgia</p>
+        {/* Location from Geolocation API */}
+        <p>Location: {userLocation}</p>
         <p>Current Time: {currentTime}</p>
       </footer>
     </div>

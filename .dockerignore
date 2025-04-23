@@ -1,0 +1,40 @@
+# flyctl launch added from .gitignore
+realtimesst.log
+.env
+
+# Python cache
+**/__pycache__
+**/server/__pycache__
+
+# Virtual environment
+**/venv
+**/server/venv
+
+# flyctl launch added from client/ada-online/.gitignore
+# Logs
+client/ada-online/**/logs
+client/ada-online/**/*.log
+client/ada-online/**/npm-debug.log*
+client/ada-online/**/yarn-debug.log*
+client/ada-online/**/yarn-error.log*
+client/ada-online/**/pnpm-debug.log*
+client/ada-online/**/lerna-debug.log*
+
+client/ada-online/**/node_modules
+client/ada-online/**/dist
+client/ada-online/**/dist-ssr
+client/ada-online/**/*.local
+
+# Editor directories and files
+client/ada-online/**/.vscode/*
+!client/ada-online/**/.vscode/extensions.json
+client/ada-online/**/.idea
+client/ada-online/**/.DS_Store
+client/ada-online/**/*.suo
+client/ada-online/**/*.ntvs*
+client/ada-online/**/*.njsproj
+client/ada-online/**/*.sln
+client/ada-online/**/*.sw?
+fly.toml
+fly.backend.toml
+fly.frontend.toml

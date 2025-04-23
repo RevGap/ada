@@ -1,0 +1,27 @@
+# fly.toml app configuration file generated for ada-front on 2025-04-23T15:02:29-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'ada-front'
+primary_region = 'bos'
+
+[build]
+  dockerfile = 'client/ada-online/Dockerfile'
+  [build.args]
+    # IMPORTANT: Replace this placeholder with your actual backend URL (e.g., https://ada-rg.fly.dev)
+    # Or set this as a secret in Fly.io and remove this line.
+    VITE_SERVER_URL = "https://ada-rg.fly.dev" 
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

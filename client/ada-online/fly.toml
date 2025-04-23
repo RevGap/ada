@@ -7,7 +7,8 @@ app = 'ada-front'
 primary_region = 'bos'
 
 [build]
-  dockerfile = 'client/ada-online/Dockerfile'
+  # Path relative to the build context (client/ada-online/)
+  dockerfile = 'Dockerfile'
   [build.args]
     # IMPORTANT: Replace this placeholder with your actual backend URL (e.g., https://ada-rg.fly.dev)
     # Or set this as a secret in Fly.io and remove this line.

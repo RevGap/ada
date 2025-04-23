@@ -350,8 +350,10 @@ function App() {
       if (cycleFinalTranscript) {
         finalTranscriptForCycle = cycleFinalTranscript.trim();
       }
-      // Optional: Display interim transcript visually if needed
-      // console.log("Interim:", interimTranscript);
+      // Use interimTranscript to satisfy the linter and for debugging
+      if (interimTranscript) {
+        console.log("Interim Transcript:", interimTranscript);
+      }
     };
 
     const handleSpeechEnd = () => {

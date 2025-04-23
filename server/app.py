@@ -201,7 +201,8 @@ def handle_video_feed_stopped():
 if __name__ == '__main__':
     print("Starting Flask-SocketIO server...")
     try:
-        socketio.run(app, debug=True, host='0.0.0.0', port=5001, use_reloader=False)
+        # Added allow_unsafe_werkzeug=True to allow running with Werkzeug dev server
+        socketio.run(app, debug=True, host='0.0.0.0', port=5001, use_reloader=False, allow_unsafe_werkzeug=True)
     finally:
         print("\nServer shutting down...")
         if ada_instance:

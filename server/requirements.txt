@@ -3,6 +3,7 @@ Flask
 Flask-SocketIO
 python-dotenv
 numpy<2.0 # Pin to version less than 2.0 to avoid compatibility issues
+gunicorn # Added for production WSGI server
 google-genai
 torch # Or torch-cpu if no CUDA GPU / for simpler setup
 python-weather

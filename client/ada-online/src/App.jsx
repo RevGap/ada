@@ -27,7 +27,9 @@ import "./components/SearchResultsWidget.css"; // **** IMPORT NEW CSS ****
 // import './components/Visualizer.module.css'; // Already imported via AiVisualizer
 
 // Constants
-const SERVER_URL = "http://localhost:5001"; // Adjust if your server runs elsewhere
+// Use environment variable for server URL, fallback for local dev
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5001";
+console.log("Connecting to server:", SERVER_URL);
 
 function App() {
   console.log("--- App component rendered ---");

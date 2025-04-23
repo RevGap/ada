@@ -27,7 +27,7 @@ import "./components/SearchResultsWidget.css"; // **** IMPORT NEW CSS ****
 // import './components/Visualizer.module.css'; // Already imported via AiVisualizer
 
 // Constants
-const SERVER_URL = "http://localhost:5000"; // Adjust if your server runs elsewhere
+const SERVER_URL = "http://localhost:5001"; // Adjust if your server runs elsewhere
 
 function App() {
   console.log("--- App component rendered ---");
@@ -750,10 +750,7 @@ function App() {
           "DEBUG: isMuted changed to true, calling stopRecognition..."
         );
         // No need to force stop here, `stopRecognition` handles the logic
-        if (stopRecognition) {
-          // Check if function exists before calling
-          stopRecognition();
-        }
+        stopRecognition(); // Call directly, existence checked by dependencies
         // Update visualizer and status immediately on mute
         if (!isPlaying.current) {
           // Only change if not speaking
@@ -769,7 +766,7 @@ function App() {
       setStatusText("Disconnected.");
     }
     // Add stopRecognition to dependency array as it's used directly
-  }, [isMuted, isConnected, micSupported, stopRecognition]);
+  }, [isMuted, isConnected, micSupported, stopRecognition]); // Added stopRecognition
 
   // --- Component Event Handlers ---
 

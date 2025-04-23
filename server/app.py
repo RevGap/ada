@@ -19,7 +19,7 @@ REACT_APP_ORIGIN_IP = f"http://127.0.0.1:{REACT_APP_PORT}"
 socketio = SocketIO(
     app,
     async_mode='threading',
-    cors_allowed_origins=[REACT_APP_ORIGIN, REACT_APP_ORIGIN_IP]
+    cors_allowed_origins="*"
 )
 
 ada_instance = None
@@ -201,7 +201,7 @@ def handle_video_feed_stopped():
 if __name__ == '__main__':
     print("Starting Flask-SocketIO server...")
     try:
-        socketio.run(app, debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+        socketio.run(app, debug=True, host='0.0.0.0', port=5001, use_reloader=False)
     finally:
         print("\nServer shutting down...")
         if ada_instance:

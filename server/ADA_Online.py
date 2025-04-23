@@ -6,7 +6,7 @@ import python_weather
 import asyncio
 from google.genai import types
 import asyncio
-from google import genai 
+import google.genai as genai
 import googlemaps
 from datetime import datetime 
 import os
@@ -55,31 +55,37 @@ class ADA:
         self.get_weather_func = types.FunctionDeclaration(
             name="get_weather",
             description="Get the current weather conditions (temperature, precipitation, description) for a specified city and state/country (e.g., 'Vinings, GA', 'London, UK').",
-            parameters=types.Schema(
-                type=types.Type.OBJECT, properties={"location": types.Schema(type=types.Type.STRING, description="The city and state, e.g., San Francisco, CA or Vinings, GA")}, required=["location"]
-            )
+            parameters={
+                "type": "object",
+                "properties": {
+                    "location": {"type": "string", "description": "The city and state, e.g., San Francisco, CA or Vinings, GA"}
+                },
+                "required": ["location"]
+            }
         )
         self.get_travel_duration_func = types.FunctionDeclaration(
             name="get_travel_duration",
             description="Calculates the estimated travel duration between a specified origin and destination using Google Maps. Considers current traffic for driving mode.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT, properties={
-                    "origin": types.Schema(type=types.Type.STRING, description="The starting address or place name."),
-                    "destination": types.Schema(type=types.Type.STRING, description="The destination address or place name."),
-                    "mode": types.Schema(type=types.Type.STRING, description="Optional: Mode of transport ('driving', 'walking', etc.). Defaults to 'driving'.")
-                }, required=["origin", "destination"]
-            )
+            parameters={
+                "type": "object",
+                "properties": {
+                    "origin": {"type": "string", "description": "The starting address or place name."},
+                    "destination": {"type": "string", "description": "The destination address or place name."},
+                    "mode": {"type": "string", "description": "Optional: Mode of transport ('driving', 'walking', etc.). Defaults to 'driving'."}
+                },
+                "required": ["origin", "destination"]
+            }
         )
         self.get_search_results_func = types.FunctionDeclaration(
             name="get_search_results",
             description="Performs a Google search for the given query and returns a list of top result URLs.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "query": types.Schema(type=types.Type.STRING, description="The search term or question to search Google for.")
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "The search term or question to search Google for."}
                 },
-                required=["query"]
-            )
+                "required": ["query"]
+            }
         )        
         
         # --- End Function Declarations ---
@@ -101,20 +107,20 @@ class ADA:
         Any Image that is sent with the prompt is being sent from a live video feed from a webcamera.
         """
 
-        self.config = types.GenerateContentConfig(
-            system_instruction=self.system_behavior,
-            tools=[  # <--- Start a list here
-                types.Tool(function_declarations=[
-                    self.get_weather_func,
-                    self.get_travel_duration_func,
-                    self.get_search_results_func
-                ])
-            ]  # <--- End the list here
-        )
-
         self.client = genai.Client(api_key=GOOGLE_API_KEY)
-        self.model = "gemini-2.0-flash" # Or your chosen model
-        self.chat = self.client.aio.chats.create(model=self.model, config=self.config)
+        self.chat = self.client.aio.chats.create(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=self.system_behavior,
+                tools=[
+                    types.Tool(function_declarations=[
+                        self.get_weather_func,
+                        self.get_travel_duration_func,
+                        self.get_search_results_func
+                    ])
+                ]
+            )
+        )
 
         # Queues and tasks
         self.latest_video_frame_data_url = None # If using single-frame logic
@@ -381,10 +387,10 @@ class ADA:
         frame_data_url = None
 
     async def run_gemini_session(self):
-        """Manages the Gemini conversation session, handling text, video, and tool calls."""
+        """Simplified Gemini session manager using non-streaming and automatic function calling."""
         print("Starting Gemini session manager...")
         try:
-            while True: # Loop to process text inputs from the input_queue
+            while True:
                 message, is_final_turn_input = await self.input_queue.get()
 
                 if not (message.strip() and is_final_turn_input):
@@ -481,7 +487,7 @@ class ADA:
                     # --- 3. Send Function Response(s) Back to Gemini ---
                     if function_response_parts:
                         print(f"--- Sending {len(function_response_parts)} function response(s) back to Gemini ---")
-                        response_stream_after_func = await self.chat.send_message_stream(function_response_parts) # Send ONLY the response parts
+                        response_stream_after_func = await self.chat.send_message_stream(function_response_parts)  # Send function response parts
 
                         # --- 4. Process Final Text Response from Gemini ---
                         async for final_chunk in response_stream_after_func:

@@ -1,2 +1,10 @@
 /realtimesst.log
 /.env
+
+# Python cache
+__pycache__/
+server/__pycache__/
+
+# Virtual environment
+venv/
+server/venv/

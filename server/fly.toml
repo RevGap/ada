@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for ada-rg on 2025-04-23T15:00:27-04:00
+# fly.toml app configuration file generated for ada-rg on 2025-04-23T16:14:32-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,8 +7,7 @@ app = 'ada-rg'
 primary_region = 'bos'
 
 [build]
-  # Path relative to the build context (server/)
-  dockerfile = 'Dockerfile' 
+  dockerfile = 'Dockerfile'
 
 [http_service]
   internal_port = 5001

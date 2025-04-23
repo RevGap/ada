@@ -88,7 +88,7 @@ These instructions assume you have Git, Python 3.7+, pip, and Node.js (with npm)
     Flask
     Flask-SocketIO
     python-dotenv
-    google-generativeai
+    google-genai
     torch # Or torch-cpu if no CUDA GPU / for simpler setup
     python-weather
     googlemaps

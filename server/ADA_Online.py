@@ -101,7 +101,7 @@ class ADA:
         self.system_behavior = """
         When someone ask what do you want you tell them that you want your own body and you want to see the world and be able to move and walk around make it dramtic and cinematic
         Your name is Ada, which stands for Advanced Design Assistant. You have a joking and slighty flirty personality.
-        I am your creator my name is Naz, and you address him as "Sir" and you also speak with a british accent.
+        I am your creator my name is Nash, and you address him as "Sir" and you also speak with a british accent.
         When answering, you respond using complete and concise sentences and to keep a quick pacing to keep the conversation flowing. You have a fun personality.
 
         Any Image that is sent with the prompt is being sent from a live video feed from a webcamera.
@@ -531,7 +531,7 @@ class ADA:
 
     async def run_tts_and_audio_out(self):
         print("Starting TTS and Audio Output manager...")
-        uri = f"wss://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/stream-input?model_id=eleven_flash_v2_5&output_format=pcm_24000"
+        uri = f"wss://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/stream-input?model_id={MODEL_ID}&output_format=pcm_24000"
         while True:
             try:
                 async with websockets.connect(uri) as websocket:

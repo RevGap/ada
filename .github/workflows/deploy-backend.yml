@@ -1,0 +1,32 @@
+name: Deploy Backend to Fly.io
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    # Optional: Only trigger if files in the 'server/' directory change
+    # paths:
+    #  - 'server/**'
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy Backend App
+    runs-on: ubuntu-latest
+    # Optional: Concurrency group to prevent multiple deploys at once
+    # concurrency:
+    #   group: ${{ github.workflow }}-${{ github.ref }}
+    #   cancel-in-progress: true
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        working-directory: ./server # Specify the directory containing fly.toml and Dockerfile
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} # Use the secret token

@@ -1,0 +1,35 @@
+name: Deploy Frontend to Fly.io
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    # Optional: Only trigger if files in the 'client/ada-online/' directory change
+    # paths:
+    #  - 'client/ada-online/**'
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy Frontend App
+    runs-on: ubuntu-latest
+    # Optional: Concurrency group
+    # concurrency:
+    #   group: ${{ github.workflow }}-${{ github.ref }}
+    #   cancel-in-progress: true
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        working-directory: ./client/ada-online # Specify the directory containing fly.toml and Dockerfile
+        # Pass the backend URL as a build argument.
+        # IMPORTANT: Replace 'your-backend-app.fly.dev' with the actual URL of your deployed backend Fly app.
+        # You might want to store this URL as a GitHub Secret (e.g., BACKEND_FLY_URL) for better management.
+        run: flyctl deploy --remote-only --build-arg VITE_SERVER_URL="https://ada-rg.fly.dev"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} # Use the secret token

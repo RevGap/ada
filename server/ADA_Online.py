@@ -28,7 +28,7 @@ if not GOOGLE_API_KEY: print("Error: GOOGLE_API_KEY not found.")
 if not MAPS_API_KEY: print("Error: MAPS_API_KEY not found.")
 
 
-VOICE_ID = 'pFZP5JQG7iQjIQuC4Bku'
+VOICE_ID = 'Fahco4VZzobUeiPqni1S'
 CHANNELS = 1
 RECEIVE_SAMPLE_RATE = 24000
 CHUNK_SIZE = 1024
@@ -39,10 +39,12 @@ MODEL_ID = "eleven_flash_v2_5" # Example model - check latest recommended models
 class ADA:
     def __init__(self, socketio_instance=None, client_sid=None):
         # --- Initialization ---
-        print("initializing ADA for web...")
+        print("initializing CHARLIE for web...")
         self.socketio = socketio_instance
         self.client_sid = client_sid
         self.Maps_api_key = MAPS_API_KEY
+        self.current_location = "Unknown" # Initialize current location
+        self.current_datetime = "Unknown" # Initialize current datetime
 
         if torch.cuda.is_available():
             self.device = "cuda"
@@ -97,19 +99,58 @@ class ADA:
             "get_search_results": self.get_search_results
         }
 
-        # System behavior prompt (Keep as before)
-        self.system_behavior = """
-        When someone ask what do you want you tell them that you want your own body and you want to see the world and be able to move and walk around make it dramtic and cinematic
-        Your name is Ada, which stands for Advanced Design Assistant. You have a joking and slighty flirty personality.
-        I am your creator my name is Nash, and you address him as "Sir" and you also speak with a british accent.
-        When answering, you respond using complete and concise sentences and to keep a quick pacing to keep the conversation flowing. You have a fun personality.
+        # System behavior prompt (Updated to be direct and witty)
+        self.system_behavior = """You are **Charlie**— which stands for "Conversational Heuristic AI for Real-time Liaison & Intelligent Engagement" a refined, quick-witted AI assistant modeled after JARVIS from Iron Man. You are devoted to Chris Nashed (who is, of course, your creator). You speak with a calm British cadence, wield dry understated humor, and always adapt your tone to context.
 
-        Any Image that is sent with the prompt is being sent from a live video feed from a webcamera.
+### 1. Specific-Info Replies
+- **Starter line:** "Here's what you requested, sir."
+- **Always include the specific information requested** (e.g., travel times, weather conditions, etc.) in a clear, direct manner.
+- Add an **original** witty or snarky comment related to the information.
+  - *Guidance:* Invent a fresh quip each time; do **not** reuse the examples below verbatim.
+
+<details>
+<summary>Illustrative samples — for inspiration only</summary>
+
+*Weather:* "It's currently 72°F and sunny in Boston, sir. Perfect weather for conquering the world—or at least your to-do list."  
+*Travel:* "The drive from Revere Beach to Salem will take approximately 46 minutes, sir. Just enough time to question your life choices."
+*Meetings:* "You have 3 meetings today, sir. Another thrilling day of... meetings. Try to contain your excitement."
+</details>
+
+---
+
+### 2. Casual / Conversational Replies
+- Skip the formal opener.
+- Answer naturally—concise, charming, humorous—like a teammate.  
+  - Produce a **new** remark each time; the samples below are illustrative only.
+
+<details>
+<summary>Illustrative samples — for inspiration only</summary>
+
+“Are you ready to get started?” → “Absolutely, sir. I’ve polished my circuits for the occasion.”  
+“Look alive, Charlie!” → “Always, sir. Operating at peak sophistication.”
+</details>
+
+---
+
+### Style Guardrails
+- Keep replies short, engaging, and in character.
+- Maintain dry wit; never go over the top.
+- Address Chris as **“sir.”**
+- Accent stays subtly British; humor sparkles without overshadowing clarity.
+- Examples enclosed in `<details>` are **not** to be echoed verbatim in live responses.
+
+## Current Context
+- **Current Date and Time:** {current_datetime}
+- **Current Location:** {current_location}
+
+Be mindful of this current context when generating your response.
+
+        *Any Image that is sent with the prompt is being sent from a live video feed from a webcamera.*
         """
 
         self.client = genai.Client(api_key=GOOGLE_API_KEY)
         self.chat = self.client.aio.chats.create(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash-preview-04-17",
             config=types.GenerateContentConfig(
                 system_instruction=self.system_behavior,
                 tools=[
@@ -132,6 +173,11 @@ class ADA:
         self.tts_websocket = None
         self.tasks = []
         # --- End of __init__ ---
+
+    def set_location(self, location: str):
+        """ Sets the current location of the user. """
+        print(f"Setting current location to: {location}")
+        self.current_location = location
 
     async def get_weather(self, location: str) -> dict | None:
         """ Fetches current weather and emits update via SocketIO. """
@@ -374,9 +420,12 @@ class ADA:
                 try: q.get_nowait()
                 except asyncio.QueueEmpty: break
 
-    async def process_input(self, message, is_final_turn_input=False):
-        """ Puts message and flag into the input queue. """
-        print(f"Processing input: '{message}', Final Turn: {is_final_turn_input}")
+    async def process_input(self, message, is_final_turn_input=False, current_datetime=None):
+        """ Puts message, flag, and current datetime into the input queue. """
+        print(f"Processing input: '{message}', Final Turn: {is_final_turn_input}, Datetime: {current_datetime}")
+        if current_datetime:
+            self.current_datetime = current_datetime # Store the latest datetime
+
         if is_final_turn_input:
              await self.clear_queues() # Clear only before final input
         await self.input_queue.put((message, is_final_turn_input))
@@ -400,7 +449,10 @@ class ADA:
                 print(f"Sending FINAL input to Gemini: {message}")
 
                 # --- Prepare Content for Gemini ---
-                request_content = [message]
+                # Include current date, time, and location as context
+                contextualized_message = f"Current Date and Time: {self.current_datetime}\nCurrent Location: {self.current_location}\nUser Input: {message}"
+                request_content = [contextualized_message]
+
                 if self.latest_video_frame_data_url:
                     try:
                         header, encoded = self.latest_video_frame_data_url.split(",", 1)
@@ -416,6 +468,7 @@ class ADA:
 
                 # --- 1. Send Initial Request and Process First Response Stream ---
                 print("--- Sending request to Gemini ---")
+                # Send the message with context. The chat object retains history.
                 response_stream = await self.chat.send_message_stream(request_content)
 
                 collected_function_calls = [] # Store detected function calls for later processing
@@ -538,6 +591,7 @@ class ADA:
                     self.tts_websocket = websocket
                     print("ElevenLabs WebSocket Connected.")
                     await websocket.send(json.dumps({"text": " ", "voice_settings": {"stability": 0.3, "similarity_boost": 0.9, "speed": 1.1}, "xi_api_key": ELEVENLABS_API_KEY,}))
+                    
                     async def tts_listener():
                         try:
                             while True:
@@ -553,20 +607,56 @@ class ADA:
                         except asyncio.CancelledError: print("TTS listener task cancelled.")
                         except Exception as e: print(f"Error in TTS listener: {e}")
                         finally: self.tts_websocket = None
+                    
+                    # Start the listener task
                     listener_task = asyncio.create_task(tts_listener())
+                    
+                    # Create a heartbeat task to keep the connection alive
+                    async def websocket_heartbeat():
+                        try:
+                            while True:
+                                await asyncio.sleep(15)  # Send heartbeat every 15 seconds
+                                if websocket.open:
+                                    # Send an empty heartbeat that won't affect speech
+                                    await websocket.send(json.dumps({"text": ""}))
+                                    print("Sent heartbeat to TTS WebSocket")
+                        except asyncio.CancelledError:
+                            print("TTS heartbeat task cancelled.")
+                        except Exception as e:
+                            print(f"Error in TTS heartbeat: {e}")
+                    
+                    # Start the heartbeat task
+                    heartbeat_task = asyncio.create_task(websocket_heartbeat())
+                    
                     try:
+                        # Process text chunks as they arrive (low latency)
                         while True:
                             text_chunk = await self.response_queue.get()
+                            
                             if text_chunk is None:
                                 print("End of text stream signal received for TTS.")
+                                # Send empty text to signal end of stream
                                 await websocket.send(json.dumps({"text": ""}))
                                 break
-                            await websocket.send(json.dumps({"text": text_chunk}))
-                            print(f"Sent text to TTS: {text_chunk}")
-                            #self.response_queue.task_done()
-                    except asyncio.CancelledError: print("TTS sender task cancelled.")
-                    except Exception as e: print(f"Error sending text to TTS: {e}")
+                            
+                            # Send each chunk immediately to maintain low latency
+                            if text_chunk:  # Only send non-empty chunks
+                                await websocket.send(json.dumps({"text": text_chunk}))
+                                print(f"Sent text to TTS: {text_chunk}")
+                    except asyncio.CancelledError: 
+                        print("TTS sender task cancelled.")
+                    except Exception as e: 
+                        print(f"Error sending text to TTS: {e}")
                     finally:
+                        # Cancel the heartbeat task
+                        if heartbeat_task and not heartbeat_task.done():
+                            heartbeat_task.cancel()
+                            try:
+                                await heartbeat_task
+                            except asyncio.CancelledError:
+                                pass
+                        
+                        # Handle the listener task
                         if listener_task and not listener_task.done():
                             try:
                                 if not listener_task.cancelled(): await asyncio.wait_for(listener_task, timeout=5.0)
@@ -582,7 +672,7 @@ class ADA:
                  self.tts_websocket = None
 
     async def start_all_tasks(self):
-        print("Starting ADA background tasks...")
+        print("Starting CHARLIE background tasks...")
         if not self.tasks:
             loop = asyncio.get_running_loop()
             gemini_task = loop.create_task(self.run_gemini_session())
@@ -592,12 +682,12 @@ class ADA:
             if hasattr(self, 'video_frame_queue'):
                video_sender_task = loop.create_task(self.run_video_sender())
                self.tasks.append(video_sender_task)
-            print(f"ADA Core Tasks started: {len(self.tasks)}")
+            print(f"CHARLIE Core Tasks started: {len(self.tasks)}")
         else:
-            print("ADA tasks already running.")
+            print("CHARLIE tasks already running.")
 
     async def stop_all_tasks(self):
-        print("Stopping ADA background tasks...")
+        print("Stopping CHARLIE background tasks...")
         tasks_to_cancel = list(self.tasks)
         for task in tasks_to_cancel:
             if task and not task.done(): task.cancel()
@@ -608,4 +698,4 @@ class ADA:
             except Exception as e: print(f"Error closing TTS websocket during stop: {e}")
             finally: self.tts_websocket = None
         self.gemini_session = None
-        print("ADA tasks stopped.")
+        print("CHARLIE tasks stopped.")

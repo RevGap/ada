@@ -88,7 +88,7 @@ body[data-theme="dark"] .app-container h1 {
   .app-container {
     margin: 10px; /* Reduce margin on smaller screens */
     padding: 15px 20px; /* Adjust padding */
-    min-height: calc(100vh - 20px); /* Adjust height calculation */
+    /* Removed min-height to allow height to be determined by content */
   }
 
   .app-container h1 {

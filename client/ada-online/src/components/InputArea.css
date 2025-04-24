@@ -21,8 +21,8 @@
     .input-area {
         flex-direction: column; /* Stack items on small screens */
         align-items: stretch; /* Stretch items to full width */
-        padding: 15px 0 5px 0; /* Adjust padding */
-        gap: 15px; /* Increase gap when stacked */
+        padding: 3px 0; /* Further reduce padding */
+        gap: 5px; /* Further reduce gap */
     }
 }
 
@@ -84,13 +84,14 @@ body[data-theme="dark"] .message-input:focus {
     flex-shrink: 0; /* Prevent buttons from shrinking */
 }
 
-/* Responsive adjustment for button width when stacked */
+/* Responsive adjustment for button width and padding when stacked */
 @media (max-width: 600px) {
     .send-button,
     .mute-button,
     .webcam-button {
         width: 100%; /* Take full width when stacked */
         margin-left: 0; /* Remove left margin */
+        padding: 8px 20px; /* Reduce vertical padding */
     }
 }
 

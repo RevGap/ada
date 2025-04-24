@@ -20,6 +20,25 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* Responsive adjustment for smaller screens */
+@media (max-width: 600px) {
+  .chatbox {
+    max-height: 40vh; /* Reduce max-height on smaller screens */
+  }
+}
+
+/* Dark Theme Styles */
+@media (prefers-color-scheme: dark) {
+  /* Apply dark theme if body doesn't explicitly have data-theme="light" */
+  body:not([data-theme="light"]) .chatbox {
+    background-color: var(
+      --card-background-dark,
+      #212529
+    ); /* Use dark card background variable */
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05); /* Lighter inner shadow for dark */
+  }
+}
+
 /* Dark Theme Styles */
 @media (prefers-color-scheme: dark) {
   /* Apply dark theme if body doesn't explicitly have data-theme="light" */

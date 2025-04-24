@@ -6,6 +6,7 @@ import threading
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 from geopy.geocoders import Nominatim # Import geopy
+from datetime import datetime # Import datetime
 
 load_dotenv()
 from ADA_Online import ADA # Make sure filename matches ADA_Online.py
@@ -23,9 +24,10 @@ socketio = SocketIO(
     cors_allowed_origins="*"
 )
 
-ada_instance = None
+ada_instances = {} # Dictionary to store ADA instances per client SID
 ada_loop = None
 ada_thread = None
+latest_user_location = "Unknown" # Store the latest known location
 
 # Initialize geolocator
 geolocator = Nominatim(user_agent="ada_app") # Added user_agent
@@ -57,7 +59,7 @@ def run_asyncio_loop(loop):
 @socketio.on('connect')
 def handle_connect():
     """ Handles new client connections """
-    global ada_instance, ada_loop, ada_thread
+    global ada_instances, ada_loop, ada_thread
     client_sid = request.sid
     print(f"\n--- handle_connect called for SID: {client_sid} ---")
 
@@ -67,9 +69,9 @@ def handle_connect():
         ada_thread = threading.Thread(target=run_asyncio_loop, args=(ada_loop,), daemon=True)
         ada_thread.start()
         print("    Started asyncio thread.")
-        socketio.sleep(0.1)
+        socketio.sleep(0.1) # Give the loop a moment to start
 
-    if ada_instance is None:
+    if client_sid not in ada_instances:
         print(f"    Creating NEW ADA instance for SID: {client_sid}")
         if not ada_loop or not ada_loop.is_running():
              print(f"    ERROR: Cannot create ADA instance, asyncio loop not ready for SID {client_sid}.")
@@ -78,23 +80,24 @@ def handle_connect():
 
         try:
             ada_instance = ADA(socketio_instance=socketio, client_sid=client_sid)
+            ada_instances[client_sid] = ada_instance
             future = asyncio.run_coroutine_threadsafe(ada_instance.start_all_tasks(), ada_loop)
             print("    ADA instance created and tasks scheduled.")
         except ValueError as e:
             print(f"    ERROR initializing ADA (ValueError) for SID {client_sid}: {e}")
             emit('error', {'message': f'Failed to initialize assistant: {e}'}, room=client_sid)
-            ada_instance = None
+            if client_sid in ada_instances: del ada_instances[client_sid]
             return
         except Exception as e:
             print(f"    ERROR initializing ADA (Unexpected) for SID {client_sid}: {e}")
             emit('error', {'message': f'Unexpected error initializing assistant: {e}'}, room=client_sid)
-            ada_instance = None
+            if client_sid in ada_instances: del ada_instances[client_sid]
             return
     else:
-        print(f"    ADA instance already exists. Updating SID from {ada_instance.client_sid} to {client_sid}")
-        ada_instance.client_sid = client_sid
+        print(f"    ADA instance already exists for SID: {client_sid}. Reusing.")
+        # Optionally update socketio_instance and client_sid if needed, though they should be correct
 
-    if ada_instance:
+    if client_sid in ada_instances:
         emit('status', {'message': 'Connected to ADA Assistant'}, room=client_sid)
     print(f"--- handle_connect finished for SID: {client_sid} ---\n")
 
@@ -102,34 +105,33 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     """ Handles client disconnections """
-    global ada_instance
+    global ada_instances
     client_sid = request.sid
     print(f"\n--- handle_disconnect called for SID: {client_sid} ---")
 
-    if ada_instance and ada_instance.client_sid == client_sid:
-        print(f"    Designated client {client_sid} disconnected. Attempting to stop ADA.")
+    if client_sid in ada_instances:
+        print(f"    Client {client_sid} disconnected. Attempting to stop CHARLIE instance.")
+        ada_instance = ada_instances[client_sid]
         if ada_loop and ada_loop.is_running():
             future = asyncio.run_coroutine_threadsafe(ada_instance.stop_all_tasks(), ada_loop)
             try:
                 future.result(timeout=10)
-                print("    ADA tasks stopped successfully.")
+                print(f"    CHARLIE tasks stopped successfully for SID: {client_sid}.")
             except TimeoutError:
-                print("    Timeout waiting for ADA tasks to stop.")
+                print(f"    Timeout waiting for CHARLIE tasks to stop for SID: {client_sid}.")
             except Exception as e:
-                print(f"    Exception during ADA task stop: {e}")
+                print(f"    Exception during CHARLIE task stop for SID {client_sid}: {e}")
             finally:
                  pass # Keep loop running
 
         else:
-             print(f"    Cannot stop ADA tasks: asyncio loop not available or not running.")
+             print(f"    Cannot stop CHARLIE tasks for SID {client_sid}: asyncio loop not available or not running.")
 
-        ada_instance = None
-        print("    ADA instance cleared.")
+        del ada_instances[client_sid]
+        print(f"    CHARLIE instance cleared for SID: {client_sid}.")
 
-    elif ada_instance:
-         print(f"    Disconnecting client {client_sid} is NOT the designated client ({ada_instance.client_sid}). ADA remains active.")
     else:
-         print(f"    Client {client_sid} disconnected, but no active ADA instance found.")
+         print(f"    Client {client_sid} disconnected, but no active CHARLIE instance found for this SID.")
 
     print(f"--- handle_disconnect finished for SID: {client_sid} ---\n")
 
@@ -140,16 +142,19 @@ def handle_text_message(data):
     client_sid = request.sid
     message = data.get('message', '')
     print(f"Received text from {client_sid}: {message}")
-    if ada_instance and ada_instance.client_sid == client_sid:
+    ada_instance = ada_instances.get(client_sid) # Get instance by SID
+    if ada_instance:
         if ada_loop and ada_loop.is_running():
-            # Process text with end_of_turn=True implicitly handled in process_input -> run_gemini_session
-            asyncio.run_coroutine_threadsafe(ada_instance.process_input(message, is_final_turn_input=True), ada_loop)
-            print(f"    Text message forwarded to ADA for SID: {client_sid}")
+            # Get current date and time
+            current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Pass text and date/time to process_input (location is set via set_location)
+            asyncio.run_coroutine_threadsafe(ada_instance.process_input(message, is_final_turn_input=True, current_datetime=current_datetime), ada_loop)
+            print(f"    Text message forwarded to CHARLIE for SID: {client_sid}")
         else:
             print(f"    Cannot process text message for SID {client_sid}: asyncio loop not ready.")
             emit('error', {'message': 'Assistant busy or loop error.'}, room=client_sid)
     else:
-        print(f"    ADA instance not ready or SID mismatch for text message from {client_sid}.")
+        print(f"    CHARLIE instance not found for SID: {client_sid}.")
         emit('error', {'message': 'Assistant not ready or session mismatch.'}, room=client_sid)
 
 
@@ -159,18 +164,21 @@ def handle_transcribed_text(data):
     client_sid = request.sid
     transcript = data.get('transcript', '')
     print(f"Received transcript from {client_sid}: {transcript}")
-    if transcript and ada_instance and ada_instance.client_sid == client_sid:
+    ada_instance = ada_instances.get(client_sid) # Get instance by SID
+    if transcript and ada_instance:
          if ada_loop and ada_loop.is_running():
-            # Process transcript with end_of_turn=True implicitly handled in process_input -> run_gemini_session
-            asyncio.run_coroutine_threadsafe(ada_instance.process_input(transcript, is_final_turn_input=True), ada_loop)
-            print(f"    Transcript forwarded to ADA for SID: {client_sid}")
+            # Get current date and time
+            current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Process transcript with end_of_turn=True implicitly handled in process_input -> run_gemini_session (location is set via set_location)
+            asyncio.run_coroutine_threadsafe(ada_instance.process_input(transcript, is_final_turn_input=True, current_datetime=current_datetime), ada_loop)
+            print(f"    Transcript forwarded to CHARLIE for SID: {client_sid}")
          else:
              print(f"    Cannot process transcript for SID {client_sid}: asyncio loop not ready.")
              emit('error', {'message': 'Assistant busy or loop error.'}, room=client_sid)
     elif not transcript:
          print("    Received empty transcript.")
     else:
-         print(f"    ADA instance not ready or SID mismatch for transcript from {client_sid}.")
+         print(f"    CHARLIE instance not found for SID: {client_sid}.")
 
 
 # ++++ ADD COORDINATE HANDLER ++++
@@ -203,6 +211,10 @@ def handle_coordinates(data):
 
                 print(f"    Reverse geocoded address for {client_sid}: {formatted_address}")
                 emit('receive_address', {'address': formatted_address}, room=client_sid)
+                # Pass location to ADA instance
+                ada_instance = ada_instances.get(client_sid) # Get instance by SID
+                if ada_instance:
+                    ada_instance.set_location(formatted_address)
             else:
                 print(f"    Could not reverse geocode coordinates for {client_sid}.")
                 emit('receive_address', {'address': 'Address not found'}, room=client_sid)
@@ -221,7 +233,8 @@ def handle_video_frame(data):
     client_sid = request.sid
     frame_data_url = data.get('frame') # Expecting data URL like 'data:image/jpeg;base64,xxxxx'
 
-    if frame_data_url and ada_instance and ada_instance.client_sid == client_sid:
+    ada_instance = ada_instances.get(client_sid) # Get instance by SID
+    if frame_data_url and ada_instance:
         if ada_loop and ada_loop.is_running():
             print(f"Received video frame from {client_sid}, forwarding...") # Optional: very verbose
             asyncio.run_coroutine_threadsafe(ada_instance.process_video_frame(frame_data_url), ada_loop)
@@ -232,7 +245,8 @@ def handle_video_feed_stopped():
     """ Client signaled that the video feed has stopped. """
     client_sid = request.sid
     print(f"Received video_feed_stopped signal from {client_sid}.")
-    if ada_instance and ada_instance.client_sid == client_sid:
+    ada_instance = ada_instances.get(client_sid) # Get instance by SID
+    if ada_instance:
         if ada_loop and ada_loop.is_running():
             # Call a method on ADA instance to clear its video queue
             asyncio.run_coroutine_threadsafe(ada_instance.clear_video_queue(), ada_loop)
@@ -240,7 +254,7 @@ def handle_video_feed_stopped():
         else:
             print(f"    Cannot clear video queue for SID {client_sid}: asyncio loop not ready.")
     else:
-        print(f"    ADA instance not ready or SID mismatch for video_feed_stopped from {client_sid}.")
+        print(f"    CHARLIE instance not found for SID: {client_sid}.")
 
 
 if __name__ == '__main__':
@@ -250,20 +264,27 @@ if __name__ == '__main__':
         socketio.run(app, debug=True, host='0.0.0.0', port=5001, use_reloader=False, allow_unsafe_werkzeug=True)
     finally:
         print("\nServer shutting down...")
-        if ada_instance:
-             print("Attempting to stop active ADA instance on server shutdown...")
+        # Stop all ADA instances on server shutdown
+        # No 'global' needed here as we are in the main script scope
+        print(f"Attempting to stop {len(ada_instances)} active CHARLIE instance(s) on server shutdown...")
+        for client_sid, ada_instance in list(ada_instances.items()): # Iterate over a copy
+             print(f"    Stopping instance for SID: {client_sid}")
              if ada_loop and ada_loop.is_running():
                  future = asyncio.run_coroutine_threadsafe(ada_instance.stop_all_tasks(), ada_loop)
                  try:
                      future.result(timeout=5)
-                     print("ADA tasks stopped.")
+                     print(f"    CHARLIE tasks stopped successfully for SID: {client_sid}.")
                  except TimeoutError:
-                     print("Timeout stopping ADA tasks during shutdown.")
+                     print(f"    Timeout waiting for CHARLIE tasks to stop for SID: {client_sid} during shutdown.")
                  except Exception as e:
-                     print(f"Exception stopping ADA tasks during shutdown: {e}")
+                     print(f"    Exception during CHARLIE task stop for SID {client_sid}: {e}")
+                 finally:
+                      pass # Keep loop running
              else:
-                 print("Cannot stop ADA instance: asyncio loop not available.")
-             ada_instance = None
+                 print(f"    Cannot stop CHARLIE instance for SID {client_sid}: asyncio loop not available.")
+             # Check if key exists before deleting, although iterating over items should guarantee it
+             if client_sid in ada_instances:
+                 del ada_instances[client_sid] # Remove from dictionary
 
         if ada_loop and ada_loop.is_running():
              print("Stopping asyncio loop from main thread...")

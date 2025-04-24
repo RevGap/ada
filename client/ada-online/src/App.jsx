@@ -14,6 +14,7 @@ import WeatherWidget from "./components/WeatherWidget";
 import MapWidget from "./components/MapWidget";
 import CodeExecutionWidget from "./components/CodeExecutionWidget";
 import SearchResultsWidget from "./components/SearchResultsWidget"; // **** IMPORT NEW WIDGET ****
+import YouTubeWidget from "./components/YoutubeWidget"; // Import YouTube Widget
 
 // Import CSS
 import "./App.css";
@@ -52,6 +53,10 @@ function App() {
   // **** ADD SEARCH RESULTS STATE ****
   const [searchInfo, setSearchInfo] = useState(null); // Holds {query: '...', results: [...]}
   // **** END SEARCH RESULTS STATE ****
+  // <<< ADD YOUTUBE WIDGET STATE >>>
+  const [showYoutubeWidget, setShowYoutubeWidget] = useState(false);
+  const [youtubeInitialQuery, setYoutubeInitialQuery] = useState(""); // State for initial YouTube search query
+  // <<< END YOUTUBE WIDGET STATE >>>
   const [userLocation, setUserLocation] = useState("Checking location..."); // State for user location
 
   // --- Refs ---
@@ -281,7 +286,7 @@ function App() {
 
     isPlaying.current = true;
     setVisualizerStatus(VISUALIZER_STATUS.SPEAKING);
-    setStatusText("Ada is speaking...");
+    setStatusText("Charlie is speaking...");
     const base64Chunk = audioQueue.current.shift();
 
     try {
@@ -554,7 +559,7 @@ function App() {
             transcript: processedTranscript,
           });
         }
-        setStatusText("Waiting for Ada..."); // Update status
+        setStatusText("Waiting for Charlie..."); // Update status
       } else {
         // Update status if no transcript sent (e.g., muted, stopped, empty)
         if (isMutedRef.current) setStatusText("Muted.");
@@ -695,12 +700,12 @@ function App() {
         if (
           adaMessageIndex.current !== -1 && // Ensure index is valid
           adaMessageIndex.current < newMessages.length && // Bounds check
-          newMessages[adaMessageIndex.current]?.sender === "ada"
+          newMessages[adaMessageIndex.current]?.sender === "charlie"
         ) {
           newMessages[adaMessageIndex.current].text += data.text;
         } else {
           // Add a new message entry for Ada
-          newMessages.push({ sender: "ada", text: data.text });
+          newMessages.push({ sender: "charlie", text: data.text });
           adaMessageIndex.current = newMessages.length - 1; // Update index
         }
         return newMessages;
@@ -918,20 +923,51 @@ function App() {
   // Send text message handler
   const handleSendText = useCallback(
     (text) => {
-      if (text && socket.current?.connected) {
-        console.log("Sending text:", text);
-        const wasListening = isListeningRef.current; // Check if was listening before stopping
+      if (!text || !socket.current?.connected) {
+        console.log("Send text skipped: No text or not connected.");
+        return; // Exit if no text or not connected
+      }
 
-        // Stop recognition temporarily to send text
-        if (stopRecognition) stopRecognition(); // Use the function directly
+      console.log("Processing text:", text);
+      const lowerText = text.toLowerCase().trim();
 
-        // Update messages UI
-        setMessages((prev) => [...prev, { sender: "user", text: text }]);
-        adaMessageIndex.current = -1; // Reset Ada message index
+      // <<< ADD COMMAND HANDLING FOR YOUTUBE WIDGET >>>
+      if (lowerText.startsWith("open youtube") || lowerText === "show youtube") {
+        console.log("Detected 'open youtube' command.");
+        setShowYoutubeWidget(true); // Show the YouTube widget
+        // Optionally, extract a search query from the command
+        const initialQuery = lowerText.replace(/open youtube|show youtube/, "").trim();
+        if (initialQuery) {
+           // If there's an initial query, pass it to the widget
+           // This requires modifying the YouTubeWidget rendering to pass this prop
+           // For now, just log it. We'll update the rendering later if needed.
+           console.log("Initial YouTube search query detected:", initialQuery);
+           // A more robust solution would involve setting a state variable here
+           // that the YouTubeWidget reads as its initialQuery prop.
+           // Let's add that state and pass it.
+           setYoutubeInitialQuery(initialQuery); // Set the initial query state
+        } else {
+           setYoutubeInitialQuery(""); // Clear previous initial query if command is just "open youtube"
+        }
+        // Do NOT send this command to the backend
+        return; // Stop processing here
+      }
+      // <<< END COMMAND HANDLING >>>
 
-        // Emit text message to backend
-        socket.current.emit("send_text_message", { message: text });
-        setStatusText("Waiting for Ada..."); // Update status
+
+      console.log("Sending text to backend:", text);
+      const wasListening = isListeningRef.current; // Check if was listening before stopping
+
+      // Stop recognition temporarily to send text
+      if (stopRecognition) stopRecognition(); // Use the function directly
+
+      // Update messages UI
+      setMessages((prev) => [...prev, { sender: "user", text: text }]);
+      adaMessageIndex.current = -1; // Reset Ada message index
+
+      // Emit text message to backend
+      socket.current.emit("send_text_message", { message: text });
+      setStatusText("Waiting for Charlie..."); // Update status
 
         // Restart recognition if it was listening before and isn't muted now
         clearTimeout(restartTimer.current); // Clear previous restart timer
@@ -952,9 +988,8 @@ function App() {
           // If wasn't listening but is unmuted, set status back to ready
           setStatusText("Ready.");
         }
-      }
     },
-    [micSupported, stopRecognition] // Include stopRecognition in dependencies
+    [micSupported, stopRecognition, setYoutubeInitialQuery] // Include setYoutubeInitialQuery in dependencies
   );
 
   // Toggle microphone mute state
@@ -999,10 +1034,17 @@ function App() {
   }, []);
   // **** END CLOSE HANDLER ****
 
+  // <<< ADD CLOSE HANDLER FOR YOUTUBE WIDGET >>>
+  const handleCloseYoutubeWidget = useCallback(() => {
+    setShowYoutubeWidget(false); // Hide the widget
+    setYoutubeInitialQuery(""); // Clear the initial query when closing
+  }, []);
+  // <<< END CLOSE HANDLER >>>
+
   // --- Render JSX ---
   return (
     <div className="app-container">
-      <h1>A.D.A</h1>
+      <h1>C.H.A.R.L.I.E</h1>
       <AiVisualizer status={visualizerStatus} />
       <StatusDisplay status={statusText} />
       <ChatBox messages={messages} />
@@ -1047,6 +1089,17 @@ function App() {
         />
       )}
       {/* **** END SEARCH RESULTS WIDGET RENDER **** */}
+
+      {/* <<< RENDER YOUTUBE WIDGET CONDITIONALLY >>> */}
+      {showYoutubeWidget && (
+        <YouTubeWidget
+          isVisible={showYoutubeWidget}
+          onClose={handleCloseYoutubeWidget}
+          socket={socket} // Pass socket ref
+          initialQuery={youtubeInitialQuery} // Pass the initial query state
+        />
+      )}
+      {/* <<< END YOUTUBE WIDGET RENDER >>> */}
 
       <footer>
         {/* Location from Geolocation API */}

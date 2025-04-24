@@ -11,11 +11,19 @@ const MapDisplay = ({ routeData }) => {
 
   // --- Example using Google Maps Embed API (Requires an API Key) ---
   // Make sure to URL-encode the destination and origin
-  const apiKey = "YOUR API KEY"; // Replace with your actual API key
+  // Read API key from Vite environment variables
+  const apiKey = import.meta.env.VITE_MAPS_API_KEY;
   const origin = routeData.origin
     ? encodeURIComponent(routeData.origin)
     : "current+location"; // Default to current location if no origin
   const destination = encodeURIComponent(routeData.destination);
+
+  // Check if API key is available
+  if (!apiKey) {
+    console.error("VITE_MAPS_API_KEY is not defined. Map widget cannot load.");
+    return <p>Map API Key is missing. Please configure VITE_MAPS_API_KEY.</p>;
+  }
+
   const mapSrc = `https://www.google.com/maps/embed/v1/directions?key=${apiKey}&origin=${origin}&destination=${destination}`;
 
   return (

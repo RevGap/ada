@@ -59,9 +59,8 @@ function InputArea({
              muteButtonText = 'Unmute';
              muteButtonClass += ' muted'; // Add 'muted' class for styling
          } else {
-              // You could optionally show "Listening..." if isListening is true
-              // muteButtonText = isListening ? 'Listening...' : 'Mute';
-              muteButtonText = 'Mute'; // Keep it simple like original for now
+              // Use isListening to show "Listening..." when active
+              muteButtonText = isListening ? 'Listening...' : 'Mute';
          }
      }
 

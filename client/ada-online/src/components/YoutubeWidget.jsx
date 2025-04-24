@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"; // Added useEffect, useRef
 import YouTube from "react-youtube";
 import PropTypes from "prop-types";
-import "./YouTubeWidget.css";
+import "./YoutubeWidget.css";
 
 // --- REMOVED --- Backend API Key and URL are no longer needed here
 // const YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY';
@@ -116,7 +116,7 @@ function YouTubeWidget({ isVisible, onClose, socket, initialQuery }) {
     },
   };
 
-  const onPlayerReady = (event) => {
+  const onPlayerReady = () => {
     console.log("Player is ready");
   };
 

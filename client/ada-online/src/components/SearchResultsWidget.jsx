@@ -1,89 +1,69 @@
 // src/components/SearchResultsWidget.jsx
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
-import "./SearchResultsWidget.css"; // Create this CSS file next
+import "./SearchResultsWidget.css";
 
 function SearchResultsWidget({ searchData, onClose }) {
-  const [isVisible, setIsVisible] = useState(true); // Controlled by parent rendering
+  const [isVisible, setIsVisible] = useState(true);
+  // Always appear at bottom-left, 40px from left and bottom
+  const [position, setPosition] = useState({ x: 40 });
   const [isDragging, setIsDragging] = useState(false);
-  // Position it near the other widgets, adjust as needed
-  const [position, setPosition] = useState({ x: 20, y: 280 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const widgetRef = useRef(null);
 
-  // Ensure widget becomes visible when new data arrives (if parent logic doesn't unmount/remount)
+  // Ensure widget becomes visible when new data arrives
   useEffect(() => {
     if (searchData?.results?.length > 0) {
       setIsVisible(true);
     }
   }, [searchData]);
 
-  // --- Dragging Logic (Similar to Weather/Map Widgets) ---
-  const handleMouseDown = useCallback((e) => {
-    if (
-      !widgetRef.current ||
-      e.target.classList.contains("search-widget-close-button") ||
-      e.target.tagName === "A" // Don't drag when clicking a link
-    ) {
-      return;
-    }
+  // --- Classic Dragging Logic ---
+  const handleMouseDown = (e) => {
+    if (e.target.classList.contains("search-widget-close-button")) return;
     setIsDragging(true);
-    const rect = widgetRef.current.getBoundingClientRect();
     setOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
     });
-    widgetRef.current.classList.add("dragging");
-    e.preventDefault();
-  }, []);
-
-  const handleMouseMove = useCallback(
-    (e) => {
-      if (!isDragging || !widgetRef.current) return;
-      const newX = e.clientX - offset.x;
-      const newY = e.clientY - offset.y;
-      setPosition({ x: newX, y: newY });
-    },
-    [isDragging, offset]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    if (isDragging) {
-      setIsDragging(false);
-      if (widgetRef.current) {
-        widgetRef.current.classList.remove("dragging");
-      }
-    }
-  }, [isDragging]);
+    document.body.style.userSelect = "none";
+  };
 
   useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y,
+      });
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = "";
+    };
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
-    } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
     }
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
-  // --- End Dragging Logic ---
+  }, [isDragging, offset]);
 
   // Use the onClose prop directly for the close button
   const handleCloseClick = (e) => {
-    e.stopPropagation(); // Prevent triggering drag on button click
+    e.stopPropagation();
     onClose();
   };
 
-  // If no data or not visible (handled by parent), don't render
+  // If no data or not visible, don't render
   if (!searchData?.results || !isVisible) {
     return null;
   }
 
   const results = searchData.results;
-  const query = searchData.query || "Search"; // Fallback title
+  const query = searchData.query || "Search";
 
   return (
     <div
@@ -91,7 +71,9 @@ function SearchResultsWidget({ searchData, onClose }) {
       className="search-widget-container"
       style={{
         left: `${position.x}px`,
-        top: `${position.y}px`,
+        bottom: `40px`,
+        position: "fixed",
+        zIndex: 999,
       }}
       onMouseDown={handleMouseDown}
     >
@@ -111,12 +93,11 @@ function SearchResultsWidget({ searchData, onClose }) {
                 href={result.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={result.url} // Show full URL on hover
+                title={result.url}
               >
-                {result.title || result.url} {/* Show title or URL */}
+                {result.title || result.url}
               </a>
-              {/* Optional: Display snippet */}
-              {/* {result.meta_snippet && <p>{result.meta_snippet}</p>} */}
+              {result.meta_snippet && <p>{result.meta_snippet}</p>}
             </li>
           ))
         ) : (
@@ -129,13 +110,13 @@ function SearchResultsWidget({ searchData, onClose }) {
 
 SearchResultsWidget.propTypes = {
   searchData: PropTypes.shape({
-    query: PropTypes.string, // The search query term
+    query: PropTypes.string,
     results: PropTypes.arrayOf(
       PropTypes.shape({
         url: PropTypes.string.isRequired,
-        title: PropTypes.string, // Title is optional but nice
-        meta_snippet: PropTypes.string, // Optional snippet
-        page_content_summary: PropTypes.string, // Optional summary
+        title: PropTypes.string,
+        meta_snippet: PropTypes.string,
+        page_content_summary: PropTypes.string,
       })
     ),
   }),

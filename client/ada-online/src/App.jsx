@@ -15,6 +15,9 @@ import MapWidget from "./components/MapWidget";
 import CodeExecutionWidget from "./components/CodeExecutionWidget";
 import SearchResultsWidget from "./components/SearchResultsWidget"; // **** IMPORT NEW WIDGET ****
 import YouTubeWidget from "./components/YoutubeWidget"; // Import YouTube Widget
+import { VoiceProvider } from "./contexts/VoiceContext";
+import { VisionProvider } from "./contexts/VisionContext";
+
 
 // Import CSS
 import "./App.css";
@@ -446,11 +449,23 @@ function App() {
 
     // Initialize only once
     if (!recognition.current) {
-      recognition.current = new SpeechRecognitionAPI();
-      recognition.current.continuous = false; // Process speech after pauses
-      recognition.current.interimResults = true; // Get results while speaking
-      recognition.current.lang = "en-US"; // Set language
-      console.log("SpeechRecognition instance created.");
+      // Create Recognition instance with grammar biasing
+      const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+      const recognitionInstance = new SpeechRecognitionAPI();
+      if (SpeechGrammarList) {
+        const grammarList = new SpeechGrammarList();
+        // Define common commands to bias recognition
+        const commands = 'play | pause | stop | next | previous | search | find | open | close';
+        const grammar = `#JSGF V1.0; grammar commands; public <command> = ${commands};`;
+        grammarList.addFromString(grammar, 1);
+        recognitionInstance.grammars = grammarList;
+      }
+      recognitionInstance.maxAlternatives = 5;
+      recognitionInstance.continuous = false; // Process speech after pauses
+      recognitionInstance.interimResults = true; // Get results while speaking
+      recognitionInstance.lang = "en-US"; // Set language
+      recognition.current = recognitionInstance;
+      console.log("SpeechRecognition instance created with grammar biasing.");
     }
 
     let finalTranscriptForCycle = ""; // Store final transcript for the current speech segment
@@ -1043,70 +1058,76 @@ function App() {
 
   // --- Render JSX ---
   return (
-    <div className="app-container">
-      <h1>C.H.A.R.L.I.E</h1>
-      <AiVisualizer status={visualizerStatus} />
-      <StatusDisplay status={statusText} />
-      <ChatBox messages={messages} />
-      <InputArea
-        onSendText={handleSendText}
-        isMuted={isMuted}
-        isListening={isListening} // Pass isListening for button text/style if needed
-        onToggleMute={handleToggleMute}
-        micSupported={micSupported}
-        isWebcamVisible={showWebcam}
-        onToggleWebcam={handleToggleWebcam}
-      />
+    <VoiceProvider>
+      <VisionProvider>
+        {/* WeatherWidget rendered outside .app-container for true viewport positioning */}
+        {weatherInfo && <WeatherWidget weatherData={weatherInfo} />}
+        {/* Widgets rendered outside .app-container for true viewport positioning */}
+        {mapInfo && <MapWidget mapData={mapInfo} />}
+        {executableCode && (
+          <CodeExecutionWidget
+            code={executableCode}
+            language={codeLanguage}
+            onClose={handleCloseCodeWidget}
+          />
+        )}
+        {searchInfo && (
+          <SearchResultsWidget
+            searchData={searchInfo}
+            onClose={handleCloseSearchResultsWidget}
+          />
+        )}
+        {showYoutubeWidget && (
+          <YouTubeWidget
+            isVisible={showYoutubeWidget}
+            onClose={handleCloseYoutubeWidget}
+            socket={socket}
+            initialQuery={youtubeInitialQuery}
+          />
+        )}
+        <div className="app-container">
+          {/* Widgets rendered OUTSIDE CHARLIE container for full-screen drag */}
+          {showWebcam && (
+            <WebcamFeed
+              isVisible={showWebcam}
+              onClose={handleToggleWebcam}
+              socket={socket}
+            />
+          )}
 
-      {/* Widgets Area - Render conditionally based on state */}
-      <WebcamFeed
-        isVisible={showWebcam}
-        onClose={handleToggleWebcam}
-        socket={socket} // Pass socket ref to WebcamFeed
-      />
-
-      {/* WeatherWidget always tries to render, but returns null if no data */}
-      <WeatherWidget weatherData={weatherInfo} />
-
-      {/* MapWidget always tries to render, but returns null if no data */}
-      <MapWidget mapData={mapInfo} />
-
-      {/* CodeExecutionWidget renders only when executableCode has data */}
-      {executableCode && (
-        <CodeExecutionWidget
-          code={executableCode}
-          language={codeLanguage}
-          onClose={handleCloseCodeWidget}
-        />
-      )}
-
-      {/* **** RENDER SEARCH RESULTS WIDGET CONDITIONALLY **** */}
-      {/* Renders only when searchInfo has data (results array might be empty) */}
-      {searchInfo && (
-        <SearchResultsWidget
-          searchData={searchInfo}
-          onClose={handleCloseSearchResultsWidget}
-        />
-      )}
-      {/* **** END SEARCH RESULTS WIDGET RENDER **** */}
-
-      {/* <<< RENDER YOUTUBE WIDGET CONDITIONALLY >>> */}
-      {showYoutubeWidget && (
-        <YouTubeWidget
-          isVisible={showYoutubeWidget}
-          onClose={handleCloseYoutubeWidget}
-          socket={socket} // Pass socket ref
-          initialQuery={youtubeInitialQuery} // Pass the initial query state
-        />
-      )}
-      {/* <<< END YOUTUBE WIDGET RENDER >>> */}
-
-      <footer>
-        {/* Location from Geolocation API */}
-        <p>Location: {userLocation}</p>
-        <p>Current Time: {currentTime}</p>
-      </footer>
-    </div>
+          {/* CHARLIE container */}
+          <header className="top-bar">
+            <h1>C.H.A.R.L.I.E</h1>
+            <StatusDisplay status={statusText} />
+          </header>
+          <div className="layout-grid">
+            <nav className="left-rail">
+              {/* TODO: Widget icons/nav */}
+            </nav>
+            <main className="center-pane">
+              <AiVisualizer status={visualizerStatus} />
+              <ChatBox messages={messages} />
+              <InputArea
+                onSendText={handleSendText}
+                isMuted={isMuted}
+                isListening={isListening}
+                onToggleMute={handleToggleMute}
+                micSupported={micSupported}
+                isWebcamVisible={showWebcam}
+                onToggleWebcam={handleToggleWebcam}
+              />
+            </main>
+            <aside className="context-sidebar">
+              {/* TODO: Context widgets (memory graph, vision data) */}
+            </aside>
+          </div>
+          <footer className="footer">
+            <p>Location: {userLocation}</p>
+            <p>Current Time: {currentTime}</p>
+          </footer>
+        </div>
+      </VisionProvider>
+    </VoiceProvider>
   );
 }
 

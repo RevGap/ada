@@ -1,121 +1,192 @@
-/* src/App.css */
+/* src/App.css - Updated with glass-like aesthetic */
 
-/* Basic futuristic theme variables */
+/* Futuristic theme variables with cyan/purple color scheme */
 :root {
-  --background-color-light: #f0f2f5;
-  --text-color-light: #333;
-  --card-background-light: #ffffff;
-  --muted-text-light: #666;
-  --primary-color-light: #007bff; /* Example primary */
-  --accent-color-light: #00c853; /* Example accent */
-
-  --background-color-dark: #1a1a2e; /* Dark background */
-  --text-color-dark: #e0e0e0; /* Light text */
-  --card-background-dark: #16213e; /* Darker card background */
-  --muted-text-dark: #a0a0a0; /* Muted text in dark mode */
-  --primary-color-dark: #4a4e69; /* Example primary */
-  --accent-color-dark: #e94560; /* Example accent */
+  /* Light theme */
+  --background-color-light: #f0f8ff;
+  --text-color-light: #ffffff;
+  --card-background-light: rgba(255, 255, 255, 0.1);
+  --muted-text-light: rgba(255, 255, 255, 0.7);
+  --primary-color-light: #00e5ff; /* Cyan primary */
+  --accent-color-light: #9d4edd; /* Purple accent */
+  
+  /* Dark theme */
+  --background-color-dark: #050520; /* Deep blue-black */
+  --text-color-dark: #ffffff; /* White text */
+  --card-background-dark: rgba(0, 0, 0, 0.4); /* Translucent dark */
+  --muted-text-dark: rgba(255, 255, 255, 0.7); /* Slightly dimmed text */
+  --primary-color-dark: #00e5ff; /* Cyan primary */
+  --accent-color-dark: #9d4edd; /* Purple accent */
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Modern font stack */
-  background-color: var(--background-color-light);
+  font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(to bottom right, #000000, #0a0a2a);
   color: var(--text-color-light);
-  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+  transition: all 0.3s ease;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Dark mode body styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) {
-    background-color: var(--background-color-dark);
+    background: linear-gradient(to bottom right, #000000, #0a0a2a);
     color: var(--text-color-dark);
   }
 }
 body[data-theme="dark"] {
-  background-color: var(--background-color-dark);
+  background: linear-gradient(to bottom right, #000000, #0a0a2a);
   color: var(--text-color-dark);
 }
 
+/* Ambient background effects */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(0, 200, 255, 0.1) 0%, transparent 60%);
+  z-index: -1;
+  pointer-events: none;
+}
 
 .app-container {
   width: 100%;
-  max-width: 700px; /* Slightly narrower */
-  /* Use theme variables */
-  background-color: var(--card-background-light); /* Default light */
-  border-radius: 12px; /* Slightly larger radius */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Softer shadow */
-  padding: 25px 30px; /* Adjust padding */
+  max-width: 700px;
+  background-color: var(--card-background-light);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 229, 255, 0.2);
+  padding: 25px 30px;
   display: flex;
   flex-direction: column;
-  margin: 20px auto; /* Center the container and add margin */
-  min-height: calc(100vh - 40px); /* Adjust height calculation for margin */
+  margin: 20px auto;
+  min-height: calc(100vh - 40px);
   box-sizing: border-box;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
 /* Apply dark mode styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .app-container {
     background-color: var(--card-background-dark);
+    border-color: rgba(157, 78, 221, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(157, 78, 221, 0.2);
   }
 }
 body[data-theme="dark"] .app-container {
   background-color: var(--card-background-dark);
+  border-color: rgba(157, 78, 221, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(157, 78, 221, 0.2);
 }
 
 .app-container h1 {
   text-align: center;
-  color: var(--primary-color-light); /* Use variable */
-  margin-bottom: 15px; /* Adjust spacing */
-  font-weight: 1000;
-  font-size: 5rem; /* Add this line - Adjust the value as needed */
-  text-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Subtle glow */
+  color: var(--primary-color-light);
+  margin-bottom: 15px;
+  font-weight: 800;
+  font-size: 5rem;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
+  letter-spacing: 2px;
 }
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .app-container h1 {
     color: var(--primary-color-dark);
-    text-shadow: 0 0 10px rgba(74, 78, 105, 0.5);
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
   }
 }
 body[data-theme="dark"] .app-container h1 {
   color: var(--primary-color-dark);
-  text-shadow: 0 0 10px rgba(74, 78, 105, 0.5);
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
 }
 
 /* Mobile responsiveness for main container */
+/* --- Force widgets to be fixed and always on top --- */
+.weather-widget,
+.map-widget,
+.code-widget-container,
+.search-widget,
+.youtube-widget {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  outline: 2px solid #ff00ff !important; /* Debug: magenta outline */
+}
+
 @media (max-width: 768px) {
   .app-container {
-    margin: 10px; /* Reduce margin on smaller screens */
-    padding: 15px 20px; /* Adjust padding */
-    /* Removed min-height to allow height to be determined by content */
+    margin: 10px;
+    padding: 15px 20px;
+    border-radius: 12px;
   }
 
   .app-container h1 {
-    font-size: 3rem; /* Reduce font size for smaller screens */
+    font-size: 3rem;
   }
 }
 
-
-/* Remove chat-wrapper if not needed, structure is in App.jsx */
-/* .chat-wrapper { ... } */
-
 footer {
-  margin-top: auto; /* Push footer to bottom */
+  margin-top: auto;
   padding-top: 15px;
-  border-top: 1px solid #eee; /* Keep separator or remove */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.85em;
-  color: var(--muted-text-light); /* Use variable */
+  color: var(--muted-text-light);
   text-align: center;
   opacity: 0.8;
 }
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) footer {
-    border-top-color: #333;
+    border-top-color: rgba(255, 255, 255, 0.1);
     color: var(--muted-text-dark);
   }
 }
 body[data-theme="dark"] footer {
-  border-top-color: #333;
+  border-top-color: rgba(255, 255, 255, 0.1);
   color: var(--muted-text-dark);
+}
+
+/* Glass effect */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s infinite ease-in-out;
+}
+
+/* Glow effects */
+.glow-text {
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.glow-purple {
+  box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
 }

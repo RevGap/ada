@@ -1,113 +1,91 @@
-/* src/components/SearchResultsWidget.css */
+/* SearchResultsWidget.css - Updated with glass-like aesthetic */
 
 .search-widget-container {
   /* --- Positioning & Dragging --- */
   position: fixed;
   /* Position set by state in component */
-  z-index: 997; /* Adjust z-index as needed relative to other widgets */
-  width: 380px; /* Slightly wider default */
-  max-width: 95%; /* Allow it to take more width on smaller screens */
-  max-height: 80vh; /* Limit max height */
+  z-index: 997;
+  width: 380px;
+  max-width: 95%;
+  max-height: 80vh;
   cursor: grab;
   user-select: none;
 
-  /* --- Base styles --- */
-  border: 1px solid var(--primary-color-light); /* Use primary theme color for border */
-  border-radius: 12px; /* Match app container radius */
+  /* --- Glass effect styling --- */
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
   padding: 15px;
-  padding-top: 35px; /* Space for title and close button */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Softer shadow */
+  padding-top: 35px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Allows list scrolling */
-  transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-
-
-  /* --- Theme Styles --- */
-  background-color: var(--card-background-light, #ffffff);
-  color: var(--text-color-light, #212529);
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .search-widget-container.dragging {
   cursor: grabbing;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* Enhance shadow while dragging */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
 /* Dark Theme Styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-container {
-    background-color: var(--card-background-dark, #2c3034);
-    color: var(--text-color-dark, #e9ecef);
-    border-color: var(--primary-color-dark); /* Use dark primary theme color */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    border-color: rgba(128, 0, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
   }
   body:not([data-theme="light"]) .search-widget-container.dragging {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(128, 0, 255, 0.3);
   }
 }
 body[data-theme="dark"] .search-widget-container {
-  background-color: var(--card-background-dark, #2c3034);
-  color: var(--text-color-dark, #e9ecef);
-  border-color: var(--primary-color-dark);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(128, 0, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
 }
 body[data-theme="dark"] .search-widget-container.dragging {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(128, 0, 255, 0.3);
 }
-/* --- End Theme Styles --- */
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .search-widget-container {
-    width: 95%; /* Take almost full width on mobile */
-    max-width: none; /* Remove max-width constraint */
-    height: 60vh; /* Adjust height */
-    border-radius: 8px; /* Slightly smaller radius */
+    width: 95%;
+    max-width: none;
+    height: 60vh;
+    border-radius: 8px;
     padding: 10px;
-    padding-top: 30px; /* Adjust padding top */
+    padding-top: 30px;
   }
 }
 
-
-/* --- Close Button Styles (Same as other widgets) --- */
+/* --- Close Button Styles --- */
 .search-widget-close-button {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.3); /* Slightly more opaque */
-  color: inherit;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
   border: none;
   border-radius: 50%;
-  width: 24px; /* Slightly larger button */
-  height: 24px; /* Slightly larger button */
-  font-size: 16px; /* Slightly larger font */
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
   font-weight: bold;
-  line-height: 24px; /* Adjust for vertical centering */
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
   padding: 0;
   z-index: 10;
-  transition: background-color 0.2s ease, transform 0.2s ease; /* Smooth transitions */
+  transition: all 0.2s ease;
 }
 .search-widget-close-button:hover {
-  background: rgba(255, 0, 0, 0.6); /* More opaque red on hover */
-  transform: rotate(90deg); /* Rotate on hover */
-}
-/* Dark theme close button */
-@media (prefers-color-scheme: dark) {
-  body:not([data-theme="light"]) .search-widget-close-button {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  body:not([data-theme="light"]) .search-widget-close-button:hover {
-    background: rgba(255, 0, 0, 0.6); /* Still red on hover in dark mode */
-  }
-}
-body[data-theme="dark"] .search-widget-close-button {
-  background: rgba(255, 255, 255, 0.3);
-}
-body[data-theme="dark"] .search-widget-close-button:hover {
-  background: rgba(255, 0, 0, 0.6);
+  background: rgba(255, 0, 0, 0.7);
+  transform: rotate(90deg);
 }
 
 /* --- Title Styles --- */
@@ -117,94 +95,79 @@ body[data-theme="dark"] .search-widget-close-button:hover {
   font-size: 1.1em;
   font-weight: 600;
   text-align: center;
-  flex-shrink: 0; /* Prevent shrinking */
-  /* Truncate long query titles */
+  flex-shrink: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--primary-color-light); /* Use primary color */
+  color: rgba(0, 255, 255, 0.9);
 }
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-container h4 {
-    color: var(--primary-color-dark); /* Use dark primary color */
+    color: rgba(128, 0, 255, 0.9);
   }
 }
 body[data-theme="dark"] .search-widget-container h4 {
-  color: var(--primary-color-dark);
+  color: rgba(128, 0, 255, 0.9);
 }
-
 
 /* --- List Styles --- */
 .search-widget-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  flex-grow: 1; /* Take remaining space */
-  overflow-y: auto; /* Enable scrolling for the list */
+  flex-grow: 1;
+  overflow-y: auto;
   font-size: 0.9em;
 }
 
 .search-widget-list li {
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--muted-text-light); /* Use muted text color */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .search-widget-list li:last-child {
   border-bottom: none;
   margin-bottom: 0;
 }
-/* Dark theme border */
-@media (prefers-color-scheme: dark) {
-  body:not([data-theme="light"]) .search-widget-list li {
-    border-bottom-color: var(--muted-text-dark);
-  }
-}
-body[data-theme="dark"] .search-widget-list li {
-  border-bottom-color: var(--muted-text-dark);
-}
 
 .search-widget-list a {
-  color: var(--accent-color-light); /* Use accent color */
+  color: rgba(0, 255, 255, 0.9);
   text-decoration: none;
-  display: block; /* Make the link take full width */
-  /* Truncate long URLs/titles */
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: all 0.2s ease;
 }
 .search-widget-list a:hover {
   text-decoration: underline;
+  color: rgba(0, 255, 255, 1);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
-/* Dark theme link */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .search-widget-list a {
-    color: var(--accent-color-dark); /* Use dark accent color */
+    color: rgba(128, 0, 255, 0.9);
+  }
+  body:not([data-theme="light"]) .search-widget-list a:hover {
+    color: rgba(128, 0, 255, 1);
+    text-shadow: 0 0 8px rgba(128, 0, 255, 0.5);
   }
 }
 body[data-theme="dark"] .search-widget-list a {
-  color: var(--accent-color-dark);
+  color: rgba(128, 0, 255, 0.9);
+}
+body[data-theme="dark"] .search-widget-list a:hover {
+  color: rgba(128, 0, 255, 1);
+  text-shadow: 0 0 8px rgba(128, 0, 255, 0.5);
 }
 
 /* Optional snippet styling */
 .search-widget-list li p {
   font-size: 0.85em;
-  color: var(--muted-text-light); /* Use muted text color */
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 3px;
   margin-bottom: 0;
-  /* Allow snippet text to wrap */
   white-space: normal;
-  overflow: hidden; /* Optional: hide overflow if needed */
-  text-overflow: ellipsis; /* Optional: add ellipsis if text is too long */
-  /* Optional: limit lines shown */
-  /* display: -webkit-box;
-     -webkit-line-clamp: 2;
-     -webkit-box-orient: vertical; */
-}
-@media (prefers-color-scheme: dark) {
-  body:not([data-theme="light"]) .search-widget-list li p {
-    color: var(--muted-text-dark); /* Use dark muted text color */
-  }
-}
-body[data-theme="dark"] .search-widget-list li p {
-  color: var(--muted-text-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

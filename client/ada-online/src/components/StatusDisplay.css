@@ -1,21 +1,25 @@
-/* src/components/StatusDisplay.css */
+/* StatusDisplay.css - Updated with glass-like aesthetic */
+
 .status-display {
-    margin-top: 10px; /* Space above the status */
-    margin-bottom: 10px; /* Space below the status, before input area */
-    font-style: normal; /* Remove italic */
-    font-weight: 500; /* Slightly bolder */
-    color: var(--muted-text-light); /* Use theme variable */
-    min-height: 1.2em; /* Ensure it takes up space even when empty */
-    text-align: center; /* Center the status text */
-    padding: 5px; /* Add a little padding */
-    transition: color 0.3s ease; /* Smooth color transition */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-style: normal;
+    font-weight: 500;
+    color: rgba(0, 255, 255, 0.8);
+    min-height: 1.2em;
+    text-align: center;
+    padding: 5px;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
     body:not([data-theme="light"]) .status-display {
-        color: var(--muted-text-dark); /* Use dark theme variable */
+        color: rgba(128, 0, 255, 0.8);
+        text-shadow: 0 0 10px rgba(128, 0, 255, 0.5);
     }
 }
 body[data-theme="dark"] .status-display {
-    color: var(--muted-text-dark); /* Use dark theme variable */
+    color: rgba(128, 0, 255, 0.8);
+    text-shadow: 0 0 10px rgba(128, 0, 255, 0.5);
 }

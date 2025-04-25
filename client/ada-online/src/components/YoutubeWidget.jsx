@@ -1,5 +1,5 @@
 // src/components/YouTubeWidget.jsx (Revised for Backend Search)
-import React, { useState, useEffect, useCallback, useRef } from "react"; // Added useEffect, useRef
+import React, { useState, useEffect, useRef } from "react"; 
 import YouTube from "react-youtube";
 import PropTypes from "prop-types";
 import "./YoutubeWidget.css";
@@ -9,85 +9,63 @@ import "./YoutubeWidget.css";
 // const YOUTUBE_API_URL = 'https://www.youtube.com/watch?v=QY8dhl1EQfI2';
 
 // <<< ADDED: Need socket prop >>>
-function YouTubeWidget({ isVisible, onClose, socket, initialQuery }) {
+function YouTubeWidget({ isVisible, onClose, socket }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [selectedVideoId, setSelectedVideoId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  // Keep track if initial search was done to prevent re-searching on re-renders
-  const initialSearchDone = useRef(false);
 
-  // --- Listener for search results/errors from backend ---
+  // Always appear at center-left, 40px from left and vertically centered
+  const [position, setPosition] = useState(() => {
+    const widgetHeight = 360;
+    const y = Math.floor(window.innerHeight / 2 - widgetHeight / 2);
+    return { x: 40, y };
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const widgetRef = useRef(null);
+
   useEffect(() => {
-    if (!socket?.current) return; // Need socket to listen
-
+    if (!socket?.current) return;
+    const sock = socket.current;
     const handleResults = (data) => {
-      console.log("Received YouTube results:", data.results);
-      setIsLoading(false);
+      setSearchResults(data.results || []);
       setError(null);
-      setSearchResults(data.results || []); // Ensure array
     };
-
-    const handleError = (data) => {
-      console.error("Received Youtube error:", data.error);
-      setIsLoading(false);
-      setError(data.error || "An unknown error occurred during search.");
-      setSearchResults([]); // Clear results on error
+    const handleError = (err) => {
+      setError(err.message || "Unknown error");
     };
-
-    socket.current.on("Youtube_results", handleResults);
-    socket.current.on("Youtube_error", handleError);
-
-    // Cleanup listeners on unmount or socket change
+    sock.on("youtube_results", handleResults);
+    sock.on("youtube_error", handleError);
     return () => {
-      socket.current?.off("Youtube_results", handleResults);
-      socket.current?.off("Youtube_error", handleError);
+      sock.off("youtube_results", handleResults);
+      sock.off("youtube_error", handleError);
     };
-  }, [socket]); // Re-run if socket changes
+  }, [socket]);
 
-  // --- Function to request search from backend ---
-  const requestSearchFromBackend = useCallback(() => {
-    if (!searchQuery.trim()) return;
-    if (!socket?.current?.connected) {
-      setError("Cannot search: Not connected to backend.");
-      return;
-    }
-
-    console.log(`Requesting Youtube for: '${searchQuery}'`);
-    setIsLoading(true);
-    setError(null);
-    setSearchResults([]); // Clear previous results while loading new ones
-    setSelectedVideoId(null); // Clear selected video
-
-    // Emit event to backend
-    socket.current.emit("perform_Youtube", { search_query: searchQuery });
-  }, [searchQuery, socket]);
-
-  // --- Handle initial query passed as prop ---
   useEffect(() => {
-    // Only run if visible, an initial query exists, and hasn't run before
-    if (
-      isVisible &&
-      initialQuery &&
-      !initialSearchDone.current &&
-      socket?.current?.connected
-    ) {
-      console.log(`Performing initial search for prop: '${initialQuery}'`);
-      setSearchQuery(initialQuery); // Set the input field
-      // Use a slight delay to ensure state update is processed before emitting
-      setTimeout(() => {
-        requestSearchFromBackend();
-      }, 50);
-      initialSearchDone.current = true; // Mark as done
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y,
+      });
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = "";
+    };
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
     }
-    // Reset if component becomes hidden or initial query changes
-    if (!isVisible) {
-      initialSearchDone.current = false;
-    }
-  }, [isVisible, initialQuery, requestSearchFromBackend, socket]); // Add socket dependency
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, offset]);
 
-  // --- Event Handlers for UI ---
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
@@ -106,7 +84,39 @@ function YouTubeWidget({ isVisible, onClose, socket, initialQuery }) {
     setSelectedVideoId(videoId);
   };
 
-  // Options for the react-youtube player (unchanged)
+  const requestSearchFromBackend = () => {
+    if (!searchQuery.trim()) return;
+    if (!socket?.current?.connected) {
+      setError("Cannot search: Not connected to backend.");
+      return;
+    }
+
+    console.log(`Requesting Youtube for: '${searchQuery}'`);
+    setIsLoading(true);
+    setError(null);
+    setSearchResults([]); // Clear previous results while loading new ones
+    setSelectedVideoId(null); // Clear selected video
+
+    // Emit event to backend
+    socket.current.emit("perform_Youtube", { search_query: searchQuery });
+  };
+
+  const handleMouseDown = (e) => {
+    if (
+      e.target.classList.contains("youtube-widget-close-button") ||
+      e.target.tagName === "INPUT" ||
+      e.target.tagName === "A"
+    ) {
+      return;
+    }
+    setIsDragging(true);
+    setOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+    document.body.style.userSelect = "none";
+  };
+
   const playerOptions = {
     height: "300",
     width: "100%",
@@ -134,7 +144,17 @@ function YouTubeWidget({ isVisible, onClose, socket, initialQuery }) {
 
   // --- JSX Structure (Mostly Unchanged) ---
   return (
-    <div className="youtube-widget-container">
+    <div
+      ref={widgetRef}
+      className="youtube-widget"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        position: "fixed",
+        zIndex: 999,
+      }}
+      onMouseDown={handleMouseDown}
+    >
       <button
         onClick={onClose}
         className="youtube-widget-close-button"
@@ -233,8 +253,7 @@ function YouTubeWidget({ isVisible, onClose, socket, initialQuery }) {
         {!isLoading &&
           !error &&
           searchResults.length === 0 &&
-          searchQuery &&
-          !initialQuery && <p>No results found for "{searchQuery}".</p>}
+          searchQuery && <p>No results found for "{searchQuery}".</p>}
       </div>
     </div>
   );

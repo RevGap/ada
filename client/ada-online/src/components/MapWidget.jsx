@@ -1,12 +1,12 @@
 // src/components/MapWidget.jsx
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import "./MapWidget.css"; // Create this CSS file next
+import "./MapWidget.css"; // Using the updated CSS
 
 // Placeholder for map rendering - replace with your chosen library (e.g., Google Maps Embed API, react-google-maps, Leaflet)
 const MapDisplay = ({ routeData }) => {
   if (!routeData || !routeData.destination) {
-    return <p>Waiting for route data...</p>;
+    return <p className="text-white/70">Waiting for route data...</p>;
   }
 
   // --- Example using Google Maps Embed API (Requires an API Key) ---
@@ -21,7 +21,11 @@ const MapDisplay = ({ routeData }) => {
   // Check if API key is available
   if (!apiKey) {
     console.error("VITE_MAPS_API_KEY is not defined. Map widget cannot load.");
-    return <p>Map API Key is missing. Please configure VITE_MAPS_API_KEY.</p>;
+    return (
+      <p className="text-white/70">
+        Map API Key is missing. Please configure VITE_MAPS_API_KEY.
+      </p>
+    );
   }
 
   const mapSrc = `https://www.google.com/maps/embed/v1/directions?key=${apiKey}&origin=${origin}&destination=${destination}`;
@@ -30,39 +34,27 @@ const MapDisplay = ({ routeData }) => {
     <iframe
       width="100%"
       height="100%"
-      style={{ border: 0 }}
+      style={{ border: 0, borderRadius: "8px" }}
       loading="lazy"
       allowFullScreen
       referrerPolicy="no-referrer-when-downgrade"
       src={mapSrc}
     ></iframe>
   );
-  // --- End Example ---
-
-  // --- Placeholder if not using Embed API ---
-  // return (
-  //   <div>
-  //     <h4>Directions</h4>
-  //     <p>From: {routeData.origin || 'Current Location'}</p>
-  //     <p>To: {routeData.destination}</p>
-  //     {/* Add map visualization here using your chosen library */}
-  //   </div>
-  // );
-  // --- End Placeholder ---
 };
 
 MapDisplay.propTypes = {
   routeData: PropTypes.shape({
     origin: PropTypes.string,
     destination: PropTypes.string.isRequired,
-    // Add other potential route properties here (e.g., waypoints, route steps)
   }),
 };
 
 function MapWidget({ mapData }) {
   const [isVisible, setIsVisible] = useState(true); // Start visible when data arrives
+  // Always appear at top-right, 40px from right and top
+  const [position, setPosition] = useState({ y: 40 }); // Initial position
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 40, y: 40 }); // Initial position
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const widgetRef = useRef(null);
 
@@ -70,66 +62,48 @@ function MapWidget({ mapData }) {
   useEffect(() => {
     if (mapData) {
       setIsVisible(true);
-      // Optionally reset position
-      // setPosition({ x: 40, y: 40 });
     } else {
       setIsVisible(false); // Hide if no map data
     }
   }, [mapData]);
 
-  // --- Dragging Logic (Similar to WeatherWidget) ---
-  const handleMouseDown = useCallback((e) => {
+  // --- Classic Dragging Logic ---
+  const handleMouseDown = (e) => {
     if (
-      !widgetRef.current ||
       e.target.classList.contains("map-widget-close-button") ||
       e.target.tagName === "IFRAME"
     ) {
-      // Don't drag if clicking close or the iframe content
       return;
     }
     setIsDragging(true);
-    const rect = widgetRef.current.getBoundingClientRect();
     setOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
     });
-    widgetRef.current.classList.add("dragging");
-    e.preventDefault();
-  }, []);
-
-  const handleMouseMove = useCallback(
-    (e) => {
-      if (!isDragging || !widgetRef.current) return;
-      const newX = e.clientX - offset.x;
-      const newY = e.clientY - offset.y;
-      setPosition({ x: newX, y: newY });
-    },
-    [isDragging, offset]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    if (isDragging) {
-      setIsDragging(false);
-      if (widgetRef.current) {
-        widgetRef.current.classList.remove("dragging");
-      }
-    }
-  }, [isDragging]);
+    document.body.style.userSelect = "none";
+  };
 
   useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y,
+      });
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = "";
+    };
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
-    } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
     }
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
-  // --- End Dragging Logic ---
+  }, [isDragging, offset]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -142,25 +116,24 @@ function MapWidget({ mapData }) {
   return (
     <div
       ref={widgetRef}
-      className="map-widget" // Use this class for styling
+      className="map-widget"
       style={{
-        left: `${position.x}px`,
+        right: `40px`,
         top: `${position.y}px`,
+        position: "fixed",
+        zIndex: 999,
       }}
       onMouseDown={handleMouseDown}
     >
       <button
         onClick={handleClose}
-        className="map-widget-close-button" // Style this button
+        className="map-widget-close-button"
         aria-label="Close Map Widget"
       >
         &times;
       </button>
       <h4>Route to {mapData.destination}</h4>
-      {/* Render the map display sub-component */}
       <div className="map-display-area">
-        {" "}
-        {/* Added wrapper for potential map library needs */}
         <MapDisplay routeData={mapData} />
       </div>
     </div>
@@ -169,9 +142,8 @@ function MapWidget({ mapData }) {
 
 MapWidget.propTypes = {
   mapData: PropTypes.shape({
-    origin: PropTypes.string, // Or whatever data your backend sends
+    origin: PropTypes.string,
     destination: PropTypes.string.isRequired,
-    // Add other expected properties
   }),
 };
 

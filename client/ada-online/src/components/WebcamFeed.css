@@ -1,88 +1,91 @@
-/* src/components/WebcamFeed.css */
+/* WebcamFeed.css - Updated with glass-like aesthetic */
 
 .webcam-feed-container {
-  position: fixed; /* Position relative to the viewport */
-  bottom: 20px; /* Distance from bottom */
-  right: 20px; /* Distance from right */
-  width: 320px; /* Default width */
-  height: 180px; /* Default height (16:9 aspect ratio) */
-  background-color: var(--card-background-dark); /* Use dark card background */
-  border: 2px solid var(--primary-color-light); /* Use primary theme color */
-  border-radius: 12px; /* Match app container radius */
-  overflow: hidden; /* Hide parts of the video that might overflow */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
-  z-index: 1000; /* Ensure it's above other content */
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  height: 180px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 255, 255, 0.2);
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: width 0.3s ease, height 0.3s ease, bottom 0.3s ease, right 0.3s ease; /* Smooth transitions */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .webcam-feed-container {
-    border-color: var(--primary-color-dark); /* Use dark primary theme color */
+    border-color: rgba(128, 0, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
   }
 }
 body[data-theme="dark"] .webcam-feed-container {
-  border-color: var(--primary-color-dark);
+  border-color: rgba(128, 0, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
 }
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .webcam-feed-container {
-    width: 240px; /* Smaller width on mobile */
-    height: 135px; /* Smaller height on mobile */
-    bottom: 10px; /* Closer to bottom on mobile */
-    right: 10px; /* Closer to right on mobile */
-    border-radius: 8px; /* Slightly smaller radius on mobile */
+    width: 240px;
+    height: 135px;
+    bottom: 10px;
+    right: 10px;
+    border-radius: 8px;
   }
 }
-
 
 .webcam-video {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Cover the container, might crop video */
-  transform: scaleX(-1); /* Mirror the video like a real mirror */
+  object-fit: cover;
+  transform: scaleX(-1);
 }
 
 .webcam-close-button {
   position: absolute;
-  top: 8px; /* Adjust position */
-  right: 8px; /* Adjust position */
-  background-color: rgba(0, 0, 0, 0.6); /* Slightly less transparent */
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 28px; /* Slightly larger button */
-  height: 28px; /* Slightly larger button */
-  font-size: 18px; /* Slightly larger font */
-  line-height: 28px; /* Center the '×' */
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 28px;
   text-align: center;
   cursor: pointer;
   padding: 0;
-  z-index: 1001; /* Above the video */
-  transition: background-color 0.2s ease, transform 0.2s ease; /* Smooth transitions */
+  z-index: 1001;
+  transition: all 0.2s ease;
 }
 
 .webcam-close-button:hover {
-  background-color: rgba(255, 0, 0, 0.8); /* More opaque red on hover */
-  transform: rotate(90deg); /* Rotate on hover */
+  background-color: rgba(255, 0, 0, 0.7);
+  transform: rotate(90deg);
 }
 
 .webcam-error {
   padding: 15px;
   text-align: center;
   font-size: 0.9em;
-  color: var(--accent-color-dark); /* Use dark accent color for error text */
+  color: rgba(255, 255, 255, 0.7);
 }
 .webcam-error p {
   margin-bottom: 10px;
 }
 .webcam-close-button.error-close {
-  position: static; /* Reset position for error layout */
+  position: static;
   margin-top: 10px;
-  background-color: var(--accent-color-dark); /* Use dark accent color */
+  background-color: rgba(0, 255, 255, 0.3);
   color: white;
   border-radius: 4px;
   width: auto;
@@ -92,5 +95,5 @@ body[data-theme="dark"] .webcam-feed-container {
   line-height: normal;
 }
 .webcam-close-button.error-close:hover {
-  background-color: var(--primary-color-dark); /* Use dark primary on hover */
+  background-color: rgba(0, 255, 255, 0.5);
 }

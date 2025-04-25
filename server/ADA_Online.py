@@ -3,6 +3,7 @@ import asyncio
 import base64
 import torch
 import python_weather
+from tts_utils import tts_friendly
 import asyncio
 from google.genai import types
 import asyncio
@@ -185,6 +186,8 @@ Be mindful of this current context when generating your response.
             try:
                 weather = await client.get(location)
                 weather_data = {
+                    'tts_temp_f': tts_friendly(str(weather.temperature)),
+                    'tts_description': tts_friendly(weather.description),
                     'location': location,
                     'current_temp_f': weather.temperature,
                     'precipitation': weather.precipitation, # Added precipitation
@@ -486,7 +489,8 @@ Be mindful of this current context when generating your response.
                             collected_function_calls.append(part.function_call) # Store the call details
                         elif part.text:
                             # Stream text parts immediately for TTS
-                            await self.response_queue.put(part.text)
+                            tts_text = tts_friendly(part.text)
+                            await self.response_queue.put(tts_text)
                             if self.socketio and self.client_sid:
                                 self.socketio.emit('receive_text_chunk', {'text': part.text}, room=self.client_sid)
                             processed_text_in_turn = True
@@ -547,7 +551,8 @@ Be mindful of this current context when generating your response.
                              if final_chunk.candidates and final_chunk.candidates[0].content and final_chunk.candidates[0].content.parts:
                                 for part in final_chunk.candidates[0].content.parts:
                                      if part.text:
-                                        await self.response_queue.put(part.text)
+                                        tts_text = tts_friendly(part.text)
+                                        await self.response_queue.put(tts_text)
                                         if self.socketio and self.client_sid:
                                             self.socketio.emit('receive_text_chunk', {'text': part.text}, room=self.client_sid)
                                         processed_text_in_turn = True
@@ -590,7 +595,7 @@ Be mindful of this current context when generating your response.
                 async with websockets.connect(uri) as websocket:
                     self.tts_websocket = websocket
                     print("ElevenLabs WebSocket Connected.")
-                    await websocket.send(json.dumps({"text": " ", "voice_settings": {"stability": 0.3, "similarity_boost": 0.9, "speed": 1.1}, "xi_api_key": ELEVENLABS_API_KEY,}))
+                    await websocket.send(json.dumps({"text": " ", "voice_settings": {"stability": 0.5, "similarity_boost": 0.75, "speed": 1.0}, "xi_api_key": ELEVENLABS_API_KEY,}))
                     
                     async def tts_listener():
                         try:
@@ -641,8 +646,9 @@ Be mindful of this current context when generating your response.
                             
                             # Send each chunk immediately to maintain low latency
                             if text_chunk:  # Only send non-empty chunks
-                                await websocket.send(json.dumps({"text": text_chunk}))
-                                print(f"Sent text to TTS: {text_chunk}")
+                                tts_text = tts_friendly(text_chunk)
+                                await websocket.send(json.dumps({"text": tts_text}))
+                                print(f"Sent text to TTS: {tts_text}")
                     except asyncio.CancelledError: 
                         print("TTS sender task cancelled.")
                     except Exception as e: 

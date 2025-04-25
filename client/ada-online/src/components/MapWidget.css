@@ -1,111 +1,101 @@
-/* src/components/MapWidget.css */
+/* MapWidget.css - Updated with glass-like aesthetic */
 
 .map-widget {
-  position: fixed; /* Use fixed to position relative to viewport */
+  position: fixed;
   /* Position set by state in component */
-  z-index: 998; /* Slightly below webcam/weather if needed */
-  width: 450px; /* Slightly wider default */
-  height: auto; /* Allow height to be determined by content */
-  max-width: 95%; /* Allow it to take more width on smaller screens */
-  max-height: 80vh; /* Limit max height */
+  z-index: 998;
+  width: 450px;
+  height: auto;
+  max-width: 95%;
+  max-height: 80vh;
   cursor: grab;
   user-select: none;
-  border: 1px solid var(--primary-color-light); /* Use primary theme color for border */
-  border-radius: 12px; /* Match app container radius */
+  
+  /* --- Glass effect styling --- */
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
   padding: 15px;
-  padding-top: 35px; /* Space for close button and title */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Softer shadow */
+  padding-top: 35px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-sizing: border-box;
-  display: flex; /* Use flexbox for layout */
-  flex-direction: column; /* Stack title and map vertically */
-  transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-
-  /* --- Theme Styles --- */
-  background-color: var(--card-background-light, #ffffff);
-  color: var(--text-color-light, #212529);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
 }
 
 .map-widget.dragging {
   cursor: grabbing;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* Enhance shadow while dragging */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
 /* Dark Theme Styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .map-widget {
-    background-color: var(--card-background-dark, #2c3034);
-    color: var(--text-color-dark, #e9ecef);
-    border-color: var(--primary-color-dark); /* Use dark primary theme color */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    border-color: rgba(128, 0, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
   }
   body:not([data-theme="light"]) .map-widget.dragging {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(128, 0, 255, 0.3);
   }
 }
 body[data-theme="dark"] .map-widget {
-  background-color: var(--card-background-dark, #2c3034);
-  color: var(--text-color-dark, #e9ecef);
-  border-color: var(--primary-color-dark);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(128, 0, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
 }
 body[data-theme="dark"] .map-widget.dragging {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(128, 0, 255, 0.3);
 }
-/* --- End Theme Styles --- */
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .map-widget {
-    width: 95%; /* Take almost full width on mobile */
-    height: auto; /* Allow height to be determined by content */
-    max-width: none; /* Remove max-width constraint */
-    max-height: 70vh; /* Adjust max height */
-    border-radius: 8px; /* Slightly smaller radius */
+    width: 95%;
+    max-width: none;
+    height: auto;
+    max-height: 70vh;
+    border-radius: 8px;
     padding: 10px;
-    padding-top: 30px; /* Adjust padding top */
+    padding-top: 30px;
   }
 }
 
-
 .map-widget-close-button {
   position: absolute;
-  top: 8px; /* Adjust position */
-  right: 8px; /* Adjust position */
-  background: rgba(0, 0, 0, 0.3); /* Slightly more opaque */
-  color: inherit; /* Inherit color from widget text */
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
   border: none;
   border-radius: 50%;
-  width: 24px; /* Slightly larger button */
-  height: 24px; /* Slightly larger button */
-  font-size: 16px; /* Slightly larger font */
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
   font-weight: bold;
-  line-height: 24px; /* Adjust for vertical centering */
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
   padding: 0;
-  z-index: 10; /* Above map content */
-  transition: background-color 0.2s ease, transform 0.2s ease; /* Smooth transitions */
+  z-index: 10;
+  transition: all 0.2s ease;
 }
 
 .map-widget-close-button:hover {
-  background: rgba(255, 0, 0, 0.6); /* More opaque red on hover */
-  transform: rotate(90deg); /* Rotate on hover */
+  background: rgba(255, 0, 0, 0.7);
+  transform: rotate(90deg);
 }
 
 /* Dark theme adjustments for close button */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .map-widget-close-button {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  body:not([data-theme="light"]) .map-widget-close-button:hover {
-    background: rgba(255, 0, 0, 0.6); /* Still red on hover in dark mode */
+    background: rgba(0, 0, 0, 0.5);
   }
 }
 body[data-theme="dark"] .map-widget-close-button {
-  background: rgba(255, 255, 255, 0.3);
-}
-body[data-theme="dark"] .map-widget-close-button:hover {
-  background: rgba(255, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .map-widget h4 {
@@ -113,42 +103,31 @@ body[data-theme="dark"] .map-widget-close-button:hover {
   margin-bottom: 10px;
   font-size: 1.1em;
   font-weight: 600;
-  text-align: center; /* Center the title */
-  flex-shrink: 0; /* Prevent title from shrinking */
-  color: var(--primary-color-light); /* Use primary color */
+  text-align: center;
+  flex-shrink: 0;
+  color: rgba(0, 255, 255, 0.9);
 }
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .map-widget h4 {
-    color: var(--primary-color-dark); /* Use dark primary color */
+    color: rgba(128, 0, 255, 0.9);
   }
 }
 body[data-theme="dark"] .map-widget h4 {
-  color: var(--primary-color-dark);
+  color: rgba(128, 0, 255, 0.9);
 }
-
 
 /* Style the container for the map display/iframe */
 .map-display-area {
-  flex-grow: 1; /* Allow map area to take remaining space */
-  border: 1px solid var(--muted-text-light); /* Use muted text color for border */
-  border-radius: 4px;
-  overflow: hidden; /* Ensure iframe fits */
-  min-height: 200px; /* Ensure a minimum height for the map area */
-}
-
-/* Dark theme border for map area */
-@media (prefers-color-scheme: dark) {
-  body:not([data-theme="light"]) .map-display-area {
-    border-color: var(--muted-text-dark);
-  }
-}
-body[data-theme="dark"] .map-display-area {
-  border-color: var(--muted-text-dark);
+  flex-grow: 1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 200px;
 }
 
 /* Ensure the iframe inside the map display area takes full dimensions */
 .map-display-area iframe {
   width: 100%;
   height: 100%;
-  display: block; /* Remove potential extra space below iframe */
+  display: block;
 }

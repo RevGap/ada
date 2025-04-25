@@ -1,108 +1,83 @@
-/* src/components/CodeExecutionWidget.css */
+/* CodeExecutionWidget.css - Updated with glass-like aesthetic */
 
 .code-widget-container {
   /* --- Fixed Positioning & Size --- */
   position: fixed;
-  top: 20px; /* Distance from top */
-  right: 20px; /* Distance from right */
-  width: 550px; /* Slightly wider default */
-  max-width: 95%; /* Allow it to take more width on smaller screens */
-  max-height: 80vh; /* Limit max height */
-  z-index: 1002; /* Ensure it's above other widgets if necessary */
-  /* Removed cursor and user-select */
+  top: 20px;
+  right: 20px;
+  width: 550px;
+  max-width: 95%;
+  max-height: 80vh;
+  z-index: 1002;
 
-  /* --- Base styles --- */
-  border: 1px solid var(--primary-color-light); /* Use primary theme color for border */
-  border-radius: 12px; /* Match app container radius */
+  /* --- Glass effect styling --- */
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
   padding: 15px;
-  padding-top: 35px; /* Space for title and close button */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Softer shadow */
+  padding-top: 35px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.3s ease, height 0.3s ease, top 0.3s ease, right 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-
-
-  /* --- Theme Styles --- */
-  background-color: var(--card-background-light, #ffffff);
-  color: var(--text-color-light, #212529);
+  transition: all 0.3s ease;
 }
 
 /* Dark Theme Styles */
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .code-widget-container {
-    background-color: var(--card-background-dark, #2c3034);
-    color: var(--text-color-dark, #e9ecef);
-    border-color: var(--primary-color-dark); /* Use dark primary theme color */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    border-color: rgba(128, 0, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
   }
 }
 body[data-theme="dark"] .code-widget-container {
-  background-color: var(--card-background-dark, #2c3034);
-  color: var(--text-color-dark, #e9ecef);
-  border-color: var(--primary-color-dark);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(128, 0, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(128, 0, 255, 0.2);
 }
-/* --- End Theme Styles --- */
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .code-widget-container {
-    width: 95%; /* Take almost full width on mobile */
-    max-width: none; /* Remove max-width constraint */
-    height: 60vh; /* Adjust height */
-    top: 10px; /* Closer to top on mobile */
-    right: 10px; /* Closer to right on mobile */
-    border-radius: 8px; /* Slightly smaller radius */
+    width: 95%;
+    max-width: none;
+    height: 60vh;
+    top: 10px;
+    right: 10px;
+    border-radius: 8px;
     padding: 10px;
-    padding-top: 30px; /* Adjust padding top */
+    padding-top: 30px;
   }
 }
-
 
 /* --- Close Button Styles --- */
 .code-widget-close-button {
   position: absolute;
-  top: 8px; /* Adjust position */
-  right: 8px; /* Adjust position */
-  background: rgba(0, 0, 0, 0.3); /* Slightly more opaque */
-  color: inherit; /* Inherit color from widget text */
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
   border: none;
   border-radius: 50%;
-  width: 24px; /* Slightly larger button */
-  height: 24px; /* Slightly larger button */
-  font-size: 16px; /* Slightly larger font */
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
   font-weight: bold;
-  line-height: 24px; /* Adjust for vertical centering */
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
   padding: 0;
-  z-index: 10; /* Above the code block */
-  transition: background-color 0.2s ease, transform 0.2s ease; /* Smooth transitions */
+  z-index: 10;
+  transition: all 0.2s ease;
 }
 
 .code-widget-close-button:hover {
-  background: rgba(255, 0, 0, 0.6); /* More opaque red on hover */
-  transform: rotate(90deg); /* Rotate on hover */
+  background: rgba(255, 0, 0, 0.7);
+  transform: rotate(90deg);
 }
-
-/* Dark theme adjustments for close button */
-@media (prefers-color-scheme: dark) {
-  body:not([data-theme="light"]) .code-widget-close-button {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  body:not([data-theme="light"]) .code-widget-close-button:hover {
-    background: rgba(255, 0, 0, 0.6); /* Still red on hover in dark mode */
-  }
-}
-body[data-theme="dark"] .code-widget-close-button {
-  background: rgba(255, 255, 255, 0.3);
-}
-body[data-theme="dark"] .code-widget-close-button:hover {
-  background: rgba(255, 0, 0, 0.6);
-}
-
 
 /* --- Title Styles --- */
 .code-widget-container h4 {
@@ -112,45 +87,32 @@ body[data-theme="dark"] .code-widget-close-button:hover {
   font-weight: 600;
   text-align: center;
   flex-shrink: 0;
-  color: var(--primary-color-light); /* Use primary color */
+  color: rgba(0, 255, 255, 0.9);
 }
 @media (prefers-color-scheme: dark) {
   body:not([data-theme="light"]) .code-widget-container h4 {
-    color: var(--primary-color-dark); /* Use dark primary color */
+    color: rgba(128, 0, 255, 0.9);
   }
 }
 body[data-theme="dark"] .code-widget-container h4 {
-  color: var(--primary-color-dark);
+  color: rgba(128, 0, 255, 0.9);
 }
-
 
 /* --- Code Block Styles --- */
 .code-widget-pre {
   flex-grow: 1;
-  background-color: var(--background-color-light); /* Use background color */
+  background-color: rgba(0, 0, 0, 0.5);
   padding: 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: auto;
   margin: 0;
   font-family: "Courier New", Courier, monospace;
   font-size: 0.9em;
   line-height: 1.4;
-  white-space: pre-wrap; /* Allow wrapping */
-  word-break: break-all; /* Break long words */
-  /* Ensure code block allows default cursor/selection */
+  white-space: pre-wrap;
+  word-break: break-all;
   cursor: text;
   user-select: text;
-  border: 1px solid var(--muted-text-light); /* Add subtle border */
-}
-
-/* Dark theme pre block */
-@media (prefers-color-scheme: dark) {
-  body:not([data-theme="light"]) .code-widget-pre {
-    background-color: var(--background-color-dark); /* Use dark background color */
-    border-color: var(--muted-text-dark); /* Use dark muted text color */
-  }
-}
-body[data-theme="dark"] .code-widget-pre {
-  background-color: var(--background-color-dark);
-  border-color: var(--muted-text-dark);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
 }

@@ -1,5 +1,6 @@
 # app.py (Revised for Client-Side STT, CORS, Logging, AND VIDEO FRAMES)
 import os
+import logging # <--- Added
 from dotenv import load_dotenv
 import asyncio
 import threading
@@ -7,6 +8,10 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 from geopy.geocoders import Nominatim # Import geopy
 from datetime import datetime # Import datetime
+
+# === Logging Setup ===
+# Set logging to DEBUG for all modules (Flask, SocketIO, etc.)
+logging.basicConfig(level=logging.DEBUG)
 
 load_dotenv()
 from ADA_Online import ADA # Make sure filename matches ADA_Online.py
@@ -21,7 +26,9 @@ REACT_APP_ORIGIN_IP = f"http://127.0.0.1:{REACT_APP_PORT}"
 socketio = SocketIO(
     app,
     async_mode='threading',
-    cors_allowed_origins="*"
+    cors_allowed_origins="*",
+    logger=True,           # <--- Enable Flask-SocketIO logs
+    engineio_logger=True   # <--- Enable Engine.IO logs
 )
 
 ada_instances = {} # Dictionary to store ADA instances per client SID
@@ -258,6 +265,7 @@ def handle_video_feed_stopped():
 
 
 if __name__ == '__main__':
+    print("\nFlask-SocketIO log test: server is starting...\n")
     print("Starting Flask-SocketIO server...")
     try:
         # Added allow_unsafe_werkzeug=True to allow running with Werkzeug dev server
@@ -275,7 +283,7 @@ if __name__ == '__main__':
                      future.result(timeout=5)
                      print(f"    CHARLIE tasks stopped successfully for SID: {client_sid}.")
                  except TimeoutError:
-                     print(f"    Timeout waiting for CHARLIE tasks to stop for SID: {client_sid} during shutdown.")
+                     print(f"    Timeout waiting for CHARLIE tasks to stop for SID {client_sid} during shutdown.")
                  except Exception as e:
                      print(f"    Exception during CHARLIE task stop for SID {client_sid}: {e}")
                  finally:

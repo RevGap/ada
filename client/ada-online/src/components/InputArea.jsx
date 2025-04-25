@@ -1,28 +1,16 @@
 // src/components/InputArea.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import './InputArea.css'; // Make sure to add styles for the new button here too
+import './InputArea.css'; // Using the updated CSS
 
-/**
- * Renders the text input, send button, mute/unmute button, and webcam button.
- * Handles user input and interactions, communicating via callbacks.
- * @param {object} props - Component props.
- * @param {function} props.onSendText - Callback when text is sent.
- * @param {boolean} props.isMuted - Whether the mic is currently muted.
- * @param {boolean} props.isListening - Whether the mic is actively listening.
- * @param {function} props.onToggleMute - Callback when mute/unmute button is clicked.
- * @param {boolean} props.micSupported - Whether the browser supports Web Speech API.
- * @param {boolean} props.isWebcamVisible - Whether the webcam feed is currently visible.
- * @param {function} props.onToggleWebcam - Callback when webcam toggle button is clicked.
- */
 function InputArea({
     onSendText,
     isMuted,
     isListening,
     onToggleMute,
     micSupported,
-    isWebcamVisible, // **** RECEIVE WEBCAM PROP ****
-    onToggleWebcam   // **** RECEIVE WEBCAM HANDLER ****
+    isWebcamVisible,
+    onToggleWebcam
 }) {
     const [inputValue, setInputValue] = useState('');
 
@@ -35,50 +23,49 @@ function InputArea({
     const handleSend = () => {
         const trimmedInput = inputValue.trim();
         if (trimmedInput) {
-            onSendText(trimmedInput); // Call parent handler
-            setInputValue(''); // Clear the input field
+            onSendText(trimmedInput);
+            setInputValue('');
         }
     };
 
     // Handle Enter key press in the input field
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
-            event.preventDefault(); // Prevent potential form submission/newline
+            event.preventDefault();
             handleSend();
         }
     };
 
     // Determine Mute button text and appearance
-     let muteButtonText = 'Mic N/A';
-     let muteButtonClass = 'mute-button';
-     let isMuteButtonDisabled = true;
+    let muteButtonText = 'Mic N/A';
+    let muteButtonClass = 'mute-button';
+    let isMuteButtonDisabled = true;
 
-     if (micSupported) {
-         isMuteButtonDisabled = false;
-         if (isMuted) {
-             muteButtonText = 'Unmute';
-             muteButtonClass += ' muted'; // Add 'muted' class for styling
-         } else {
-              // Use isListening to show "Listening..." when active
-              muteButtonText = isListening ? 'Listening...' : 'Mute';
-         }
-     }
+    if (micSupported) {
+        isMuteButtonDisabled = false;
+        if (isMuted) {
+            muteButtonText = 'Unmute';
+            muteButtonClass += ' muted';
+        } else {
+            // Use isListening to show "Listening..." when active
+            muteButtonText = isListening ? 'Listening...' : 'Mute';
+        }
+    }
 
-    // **** DETERMINE WEBCAM BUTTON TEXT/STYLE ****
+    // Determine webcam button text/style
     const webcamButtonText = isWebcamVisible ? 'Hide Cam' : 'Show Cam';
     const webcamButtonClass = `webcam-button ${isWebcamVisible ? 'active' : ''}`;
-
 
     return (
         <div className="input-area">
             <input
                 type="text"
-                id="message-input" // Keep original ID if needed, though less common in React
+                id="message-input"
                 className="message-input"
                 placeholder="Type your message or use the mic..."
                 value={inputValue}
                 onChange={handleInputChange}
-                onKeyDown={handleKeyPress} // Use onKeyDown for better Enter key detection
+                onKeyDown={handleKeyPress}
                 aria-label="Message Input"
             />
             <button
@@ -92,13 +79,12 @@ function InputArea({
                 className={muteButtonClass}
                 onClick={onToggleMute}
                 disabled={isMuteButtonDisabled}
-                aria-label={muteButtonText} // Good for accessibility
+                aria-label={muteButtonText}
             >
                 {muteButtonText}
             </button>
-             {/* **** ADD WEBCAM TOGGLE BUTTON **** */}
             <button
-                className={webcamButtonClass} // Add specific styles in InputArea.css
+                className={webcamButtonClass}
                 onClick={onToggleWebcam}
                 aria-label={webcamButtonText}
             >
@@ -111,11 +97,11 @@ function InputArea({
 InputArea.propTypes = {
     onSendText: PropTypes.func.isRequired,
     isMuted: PropTypes.bool.isRequired,
-    isListening: PropTypes.bool.isRequired, // Include if used for styling/text
+    isListening: PropTypes.bool.isRequired,
     onToggleMute: PropTypes.func.isRequired,
     micSupported: PropTypes.bool.isRequired,
-    isWebcamVisible: PropTypes.bool.isRequired, // **** ADD WEBCAM PROP TYPE ****
-    onToggleWebcam: PropTypes.func.isRequired,  // **** ADD WEBCAM HANDLER PROP TYPE ****
+    isWebcamVisible: PropTypes.bool.isRequired,
+    onToggleWebcam: PropTypes.func.isRequired,
 };
 
 export default InputArea;
